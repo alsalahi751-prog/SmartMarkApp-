@@ -1,0 +1,60 @@
+name: Build SmartMark APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Copy web assets
+        run: npx cap copy android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: SmartMark-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+اضغط **"Commit changes"** ← **"Commit changes"** ✅
+
+---
+
+### الخطوة ٤ — أنشئ ملف index.html
+
+اضغط **"Add file"** ← **"Create new file"**
+
+في خانة الاسم اكتب:
+```
+www/index.html

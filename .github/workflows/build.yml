@@ -32,11 +32,11 @@ jobs:
 
       - name: Copy app icons
         run: |
-          cp -r mipmap-mdpi android/app/src/main/res/
-          cp -r mipmap-hdpi android/app/src/main/res/
-          cp -r mipmap-xhdpi android/app/src/main/res/
-          cp -r mipmap-xxhdpi android/app/src/main/res/
-          cp -r mipmap-xxxhdpi android/app/src/main/res/
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher.png
+            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_round.png
+            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_foreground.png
+          done
 
       - name: Build APK
         run: |

@@ -70,6 +70,7 @@ jobs:
           cat > app/build.gradle << 'EOF'
           apply plugin: 'com.android.application'
           android {
+              namespace "com.smartmark.app"
               compileSdkVersion 33
               defaultConfig {
                   applicationId "com.smartmark.app"

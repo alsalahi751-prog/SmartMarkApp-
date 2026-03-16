@@ -10,45 +10,145 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Capacitor v5
+      - name: Create Android WebView Project
         run: |
-          npm init -y
-          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
+          mkdir -p app/src/main/java/com/smartmark/app
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/mipmap-xhdpi
+          mkdir -p app/src/main/res/mipmap-xxhdpi
+          mkdir -p app/src/main/res/mipmap-xxxhdpi
+          mkdir -p app/src/main/assets
 
-      - name: Setup Android project
-        run: |
-          npx cap init SmartMark com.smartmark.app --web-dir www
-          npx cap add android
-          npx cap copy android
+      - name: Copy HTML to assets
+        run: cp www/index.html app/src/main/assets/index.html
 
-      - name: Disable splash screen
-        run: |
-          sed -i 's/android:theme="@style\/AppTheme.NoActionBarLaunch"/android:theme="@style\/AppTheme.NoActionBar"/g' android/app/src/main/AndroidManifest.xml
-
-      - name: Copy app icons
+      - name: Copy icons
         run: |
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher.png
-            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_round.png
-            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_foreground.png
+            cp mipmap-${density}/ic_launcher.png app/src/main/res/mipmap-${density}/ic_launcher.png
+            cp mipmap-${density}/ic_launcher.png app/src/main/res/mipmap-${density}/ic_launcher_round.png
           done
+
+      - name: Create project files
+        run: |
+          cat > settings.gradle << 'EOF'
+          rootProject.name = "SmartMark"
+          include ':app'
+          EOF
+
+          cat > build.gradle << 'EOF'
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
+          }
+          allprojects {
+              repositories { google(); mavenCentral() }
+          }
+          EOF
+
+          cat > app/build.gradle << 'EOF'
+          apply plugin: 'com.android.application'
+          android {
+              compileSdkVersion 34
+              defaultConfig {
+                  applicationId "com.smartmark.app"
+                  minSdkVersion 24
+                  targetSdkVersion 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+              buildTypes {
+                  debug { minifyEnabled false }
+              }
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <application
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:label="SmartMark"
+                  android:roundIcon="@mipmap/ic_launcher_round"
+                  android:theme="@style/AppTheme">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:configChanges="orientation|screenSize">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <WebView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/webview"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"/>
+          EOF
+
+          cat > app/src/main/res/values/styles.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="android:Theme.Material.NoTitleBar.Fullscreen">
+                  <item name="android:windowBackground">#0a0a14</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > app/src/main/java/com/smartmark/app/MainActivity.java << 'EOF'
+          package com.smartmark.app;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebSettings;
+          import android.webkit.WebViewClient;
+          public class MainActivity extends Activity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  setContentView(R.layout.activity_main);
+                  WebView webView = findViewById(R.id.webview);
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setAllowFileAccessFromFileURLs(true);
+                  settings.setAllowUniversalAccessFromFileURLs(true);
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+          }
+          EOF
+
+      - name: Setup Gradle wrapper
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.1-bin.zip -O gradle.zip
+          unzip -q gradle.zip
+          export PATH=$PATH:$(pwd)/gradle-8.1/bin
+          gradle wrapper
+          chmod +x gradlew
 
       - name: Build APK
         run: |
-          cd android
-          chmod +x gradlew
+          export PATH=$PATH:$(pwd)/gradle-8.1/bin
           ./gradlew assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: SmartMark-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk

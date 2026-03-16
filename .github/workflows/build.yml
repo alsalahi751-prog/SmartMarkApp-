@@ -18,6 +18,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Gradle 7.6
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-7.6-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /opt
+          export GRADLE_HOME=/opt/gradle-7.6
+          export PATH=$GRADLE_HOME/bin:$PATH
+          echo "GRADLE_HOME=/opt/gradle-7.6" >> $GITHUB_ENV
+          echo "/opt/gradle-7.6/bin" >> $GITHUB_PATH
+          gradle --version
+
       - name: Create project structure
         run: |
           mkdir -p app/src/main/java/com/smartmark/app
@@ -29,7 +39,6 @@ jobs:
           mkdir -p app/src/main/res/mipmap-xxhdpi
           mkdir -p app/src/main/res/mipmap-xxxhdpi
           mkdir -p app/src/main/assets
-          mkdir -p gradle/wrapper
 
           cp www/index.html app/src/main/assets/index.html
 
@@ -37,19 +46,6 @@ jobs:
             cp mipmap-${density}/ic_launcher.png app/src/main/res/mipmap-${density}/ic_launcher.png
             cp mipmap-${density}/ic_launcher.png app/src/main/res/mipmap-${density}/ic_launcher_round.png
           done
-
-      - name: Create Gradle wrapper files
-        run: |
-          cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/v7.6.0/gradlew -o gradlew
-          chmod +x gradlew
 
       - name: Create build files
         run: |
@@ -137,6 +133,11 @@ jobs:
               }
           }
           EOF
+
+      - name: Generate Gradle wrapper
+        run: |
+          gradle wrapper --gradle-version 7.6 --distribution-type bin
+          chmod +x gradlew
 
       - name: Build APK
         run: ./gradlew assembleDebug --no-daemon

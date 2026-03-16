@@ -4,18 +4,13 @@
   "webDir": "www",
   "android": {
     "minSdkVersion": 24
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0a14",
+      "showSpinner": false
+    }
   }
 }
-```
-
-ثم انزل للأسفل واضغط **"Commit changes"** ← **"Commit changes"** مرة ثانية ✅
-
----
-
-### الخطوة ٣ — أنشئ ملف build.yml
-
-اضغط **"Add file"** ← **"Create new file"**
-
-في خانة الاسم اكتب هذا بالضبط — **بما فيه الشرطات المائلة:**
-```
-.github/workflows/build.yml

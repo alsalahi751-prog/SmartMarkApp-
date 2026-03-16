@@ -1098,18 +1098,10 @@ let folders = [
 window.onload = () => {
   updateClock();
   setInterval(updateClock, 60000);
-  setTimeout(() => {
-    document.getElementById('splash').classList.add('hide');
-    setTimeout(() => {
-      document.getElementById('splash').style.display = 'none';
-      const seenOb = localStorage.getItem('sm_ob_done');
-      if (seenOb) {
-        showApp();
-      } else {
-        document.getElementById('onboarding').classList.add('show');
-      }
-    }, 600);
-  }, 2200);
+  // إخفاء splash فوراً وفتح التطبيق مباشرة
+  document.getElementById('splash').style.display = 'none';
+  localStorage.setItem('sm_ob_done','1'); // تخطي onboarding دائماً
+  showApp();
 };
 
 function updateClock() {

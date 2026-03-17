@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SmartMark Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
 <style>
 :root {
   --bg: #0a0a14;
@@ -718,18 +718,6 @@ body::before {
   .items-grid { grid-template-columns: 1fr; }
 }
 </style>
-<script>
-// إخفاء splash فوراً عند تحميل DOM
-document.addEventListener('DOMContentLoaded', function() {
-  var splash = document.getElementById('splash');
-  if (splash) splash.style.display = 'none';
-  var onboarding = document.getElementById('onboarding');
-  if (onboarding) onboarding.style.display = 'none';
-  var app = document.getElementById('app');
-  if (app) { app.style.display = 'flex'; app.classList.add('visible'); }
-});
-</script>
-
 </head>
 <body>
 
@@ -868,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="profile-avatar">👤</div>
         <div class="profile-info">
           <div class="profile-name">قاسم المستخدم</div>
-          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e4b4d5b4c7e4d535f4c4a535f4c55105f4e4e">[email&#160;protected]</a></div>
+          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d787e687f4d7e606c7f79606c7f66236c7d7d">[email&#160;protected]</a></div>
           <div class="profile-badge">✨ Pro</div>
         </div>
       </div>
@@ -1044,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ==========================================
 // DATA
 // ==========================================
@@ -1092,7 +1080,6 @@ let folders = [
 window.onload = () => {
   updateClock();
   setInterval(updateClock, 60000);
-  // إخفاء splash فوراً وفتح التطبيق مباشرة
   document.getElementById('splash').style.display = 'none';
   localStorage.setItem('sm_ob_done', '1');
   showApp();
@@ -1456,4 +1443,14 @@ function showToast(msg, bg) {
   t.textContent = msg;
   if (bg) t.style.background = bg;
   else t.style.background = 'var(--success)';
-  t.clas
+  t.classsList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDetail(); hideShareSheet(); }
+});
+</script>
+</body>
+</html>

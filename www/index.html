@@ -856,7 +856,7 @@ body::before {
         <div class="profile-avatar">👤</div>
         <div class="profile-info">
           <div class="profile-name">قاسم المستخدم</div>
-          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4d383e283f0d3e202c3f39202c3f26632c3d3d">[email&#160;protected]</a></div>
+          <div class="profile-email">user@smartmark.app</div>
           <div class="profile-badge">✨ Pro</div>
         </div>
       </div>
@@ -1032,7 +1032,7 @@ body::before {
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ==========================================
 // DATA
 // ==========================================
@@ -1052,25 +1052,7 @@ const PLATFORMS = {
   other:     { icon: '🌐', color: '#6366f1', class: 'bg-gen' },
 };
 
-// تحميل البيانات من localStorage عند البدء
-function loadItems() {
-  const saved = localStorage.getItem('smartmark_items');
-  if (saved) {
-    try { return JSON.parse(saved); } catch(e) {}
-  }
-  return [
-  {id:1,title:'رحلة مذهلة في جبال الألب السويسرية',platform:'instagram',type:'image',emoji:'🏔',url:'instagram.com/p/swiss_alps_trip',notes:'منظر خلاب جداً',fav:true,date:'٢٠٢٤/١/١٥',folder:'سفر'},
-  {id:2,title:'أفضل وصفات الرامن اليابانية الأصيلة',platform:'youtube',type:'video',emoji:'🍜',url:'youtu.be/ramen_recipe',notes:'وصفة ممتازة',fav:false,date:'٢٠٢٤/١/١٤',folder:'طعام'}
-  ];
-}
-
-function saveItems() {
-  localStorage.setItem('smartmark_items', JSON.stringify(items));
-}
-
-let items = loadItems();
-// نسخة احتياطية — لا تحذف هذا السطر
-const _dummy = [
+let items = [
   { id:1, title:'رحلة مذهلة في جبال الألب السويسرية', platform:'instagram', type:'image', emoji:'🏔', url:'instagram.com/p/swiss_alps_trip', notes:'منظر خلاب جداً، يستحق الزيارة', fav:true, date:'٢٠٢٤/١/١٥', folder:'سفر' },
   { id:2, title:'أفضل وصفات الرامن اليابانية الأصيلة', platform:'youtube', type:'video', emoji:'🍜', url:'youtu.be/ramen_recipe_japan', notes:'وصفة ممتازة للطبخ', fav:false, date:'٢٠٢٤/١/١٤', folder:'طعام' },
   { id:3, title:'مقابلة حصرية مع إيلون ماسك حول الذكاء الاصطناعي', platform:'twitter', type:'link', emoji:'🤖', url:'twitter.com/elonmusk/status/123', notes:'', fav:true, date:'٢٠٢٤/١/١٣', folder:'تقنية' },
@@ -1098,10 +1080,18 @@ let folders = [
 window.onload = () => {
   updateClock();
   setInterval(updateClock, 60000);
-  // إخفاء splash فوراً وفتح التطبيق مباشرة
-  document.getElementById('splash').style.display = 'none';
-  localStorage.setItem('sm_ob_done','1'); // تخطي onboarding دائماً
-  showApp();
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(() => {
+      document.getElementById('splash').style.display = 'none';
+      const seenOb = localStorage.getItem('sm_ob_done');
+      if (seenOb) {
+        showApp();
+      } else {
+        document.getElementById('onboarding').classList.add('show');
+      }
+    }, 600);
+  }, 2200);
 };
 
 function updateClock() {
@@ -1270,7 +1260,6 @@ function toggleFav(id, el) {
   const item = items.find(i => i.id === id);
   if (!item) return;
   item.fav = !item.fav;
-  saveItems();
   el.classList.toggle('fav-active', item.fav);
   renderItems();
   renderSavedList();
@@ -1280,7 +1269,6 @@ function toggleFav(id, el) {
 function deleteItem(id) {
   if (!confirm('هل تريد حذف هذا العنصر؟')) return;
   items = items.filter(i => i.id !== id);
-  saveItems();
   renderItems();
   renderSavedList();
   showToast('🗑 تم الحذف');
@@ -1368,7 +1356,6 @@ function saveFromSheet() {
   };
 
   items.unshift(newItem);
-  saveItems();
   hideShareSheet();
   renderItems();
   renderSavedList();
@@ -1465,4 +1452,14 @@ function showToast(msg, bg) {
   t.textContent = msg;
   if (bg) t.style.background = bg;
   else t.style.background = 'var(--success)';
-  t.clas
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDetail(); hideShareSheet(); }
+});
+</script>
+</body>
+</html>

@@ -718,6 +718,18 @@ body::before {
   .items-grid { grid-template-columns: 1fr; }
 }
 </style>
+<script>
+// إخفاء splash فوراً عند تحميل DOM
+document.addEventListener('DOMContentLoaded', function() {
+  var splash = document.getElementById('splash');
+  if (splash) splash.style.display = 'none';
+  var onboarding = document.getElementById('onboarding');
+  if (onboarding) onboarding.style.display = 'none';
+  var app = document.getElementById('app');
+  if (app) { app.style.display = 'flex'; app.classList.add('visible'); }
+});
+</script>
+
 </head>
 <body>
 
@@ -856,7 +868,7 @@ body::before {
         <div class="profile-avatar">👤</div>
         <div class="profile-info">
           <div class="profile-name">قاسم المستخدم</div>
-          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9eebedfbecdeedf3ffeceaf3ffecf5b0ffeeee">[email&#160;protected]</a></div>
+          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e4b4d5b4c7e4d535f4c4a535f4c55105f4e4e">[email&#160;protected]</a></div>
           <div class="profile-badge">✨ Pro</div>
         </div>
       </div>
@@ -1036,7 +1048,6 @@ body::before {
 // ==========================================
 // DATA
 // ==========================================
-// تحميل البيانات المحفوظة عند البدء
 let currentDetailIndex = null;
 let activeFilter = 'all';
 let isGridView = true;
@@ -1052,19 +1063,6 @@ const PLATFORMS = {
   pinterest: { icon: '📌', color: '#e60023', class: 'bg-pin' },
   other:     { icon: '🌐', color: '#6366f1', class: 'bg-gen' },
 };
-
-// ====== localStorage Support ======
-function saveToStorage() {
-  try { localStorage.setItem('sm_items', JSON.stringify(items)); } catch(e) {}
-}
-function loadFromStorage() {
-  try {
-    const d = localStorage.getItem('sm_items');
-    if (d) return JSON.parse(d);
-  } catch(e) {}
-  return null;
-}
-// ===================================
 
 let items = [
   { id:1, title:'رحلة مذهلة في جبال الألب السويسرية', platform:'instagram', type:'image', emoji:'🏔', url:'instagram.com/p/swiss_alps_trip', notes:'منظر خلاب جداً، يستحق الزيارة', fav:true, date:'٢٠٢٤/١/١٥', folder:'سفر' },
@@ -1094,18 +1092,10 @@ let folders = [
 window.onload = () => {
   updateClock();
   setInterval(updateClock, 60000);
-  setTimeout(() => {
-    document.getElementById('splash').classList.add('hide');
-    setTimeout(() => {
-      document.getElementById('splash').style.display = 'none';
-      const seenOb = localStorage.getItem('sm_ob_done');
-      if (seenOb) {
-        showApp();
-      } else {
-        document.getElementById('onboarding').classList.add('show');
-      }
-    }, 600);
-  }, 2200);
+  // إخفاء splash فوراً وفتح التطبيق مباشرة
+  document.getElementById('splash').style.display = 'none';
+  localStorage.setItem('sm_ob_done', '1');
+  showApp();
 };
 
 function updateClock() {
@@ -1274,7 +1264,6 @@ function toggleFav(id, el) {
   const item = items.find(i => i.id === id);
   if (!item) return;
   item.fav = !item.fav;
-  saveToStorage();
   el.classList.toggle('fav-active', item.fav);
   renderItems();
   renderSavedList();
@@ -1284,7 +1273,6 @@ function toggleFav(id, el) {
 function deleteItem(id) {
   if (!confirm('هل تريد حذف هذا العنصر؟')) return;
   items = items.filter(i => i.id !== id);
-  saveToStorage();
   renderItems();
   renderSavedList();
   showToast('🗑 تم الحذف');
@@ -1372,7 +1360,6 @@ function saveFromSheet() {
   };
 
   items.unshift(newItem);
-  saveToStorage();
   hideShareSheet();
   renderItems();
   renderSavedList();

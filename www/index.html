@@ -986,9 +986,11 @@ body::before {
 <div class="bottom-sheet" id="shareSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">حفظ محتوى جديد</div>
-  <div class="url-preview">
-    <div class="url-source" id="sheetPlatform">🌐 رابط مشارك</div>
-    <div class="url-text" id="sheetUrl">instagram.com/p/Cx7Y8zNK_example</div>
+  <input class="sheet-input" type="url" id="sheetUrlInput" placeholder="الصق الرابط هنا..." 
+         oninput="detectPlatformFromInput(this.value)" dir="ltr" />
+  <div class="url-preview" id="urlPreview" style="display:none">
+    <div class="url-source" id="sheetPlatform">🌐 رابط</div>
+    <div class="url-text" id="sheetUrl"></div>
   </div>
   <input class="sheet-input" type="text" id="sheetTitle" placeholder="عنوان (اختياري)" />
   <input class="sheet-input" type="text" id="sheetNotes" placeholder="ملاحظات…" />
@@ -1021,9 +1023,9 @@ body::before {
       <span id="favDetailIcon">⭐</span>
       <div id="favDetailText">مفضلة</div>
     </button>
-    <button class="detail-btn" onclick="shareDetail()">
-      <span>⎋</span>
-      <div>مشاركة</div>
+    <button class="detail-btn" onclick="openUrl()">
+      <span>🔗</span>
+      <div>فتح الرابط</div>
     </button>
     <button class="detail-btn" style="color:var(--error);border-color:var(--error)" onclick="deleteDetail()">
       <span>🗑</span>
@@ -1036,6 +1038,18 @@ body::before {
 // ==========================================
 // DATA
 // ==========================================
+
+// دوال localStorage
+function saveItems() {
+  try { localStorage.setItem('sm_items', JSON.stringify(items)); } catch(e) {}
+}
+function loadItems() {
+  try {
+    const d = localStorage.getItem('sm_items');
+    if (d) return JSON.parse(d);
+  } catch(e) {}
+  return null;
+}
 let currentDetailIndex = null;
 let activeFilter = 'all';
 let isGridView = true;
@@ -1093,6 +1107,10 @@ function updateClock() {
 }
 
 function showApp() {
+  // تحميل البيانات المحفوظة
+  const saved = loadItems();
+  if (saved && saved.length > 0) items = saved;
+  
   document.getElementById('app').classList.add('visible');
   renderItems();
   renderSavedList();
@@ -1251,6 +1269,7 @@ function toggleFav(id, el) {
   const item = items.find(i => i.id === id);
   if (!item) return;
   item.fav = !item.fav;
+  saveItems();
   el.classList.toggle('fav-active', item.fav);
   renderItems();
   renderSavedList();
@@ -1260,6 +1279,7 @@ function toggleFav(id, el) {
 function deleteItem(id) {
   if (!confirm('هل تريد حذف هذا العنصر؟')) return;
   items = items.filter(i => i.id !== id);
+  saveItems();
   renderItems();
   renderSavedList();
   showToast('🗑 تم الحذف');
@@ -1308,12 +1328,31 @@ const sampleUrls = [
   { platform:'🐦 Twitter/X', url:'x.com/user/status/987654321' },
 ];
 
+function detectPlatformFromInput(url) {
+  if (!url) { document.getElementById('urlPreview').style.display='none'; return; }
+  let platform = 'other';
+  if (url.includes('instagram')) platform = 'instagram';
+  else if (url.includes('tiktok')) platform = 'tiktok';
+  else if (url.includes('facebook') || url.includes('fb.')) platform = 'facebook';
+  else if (url.includes('youtube') || url.includes('youtu.be')) platform = 'youtube';
+  else if (url.includes('twitter') || url.includes('x.com')) platform = 'twitter';
+  else if (url.includes('linkedin')) platform = 'linkedin';
+  else if (url.includes('pinterest')) platform = 'pinterest';
+  
+  const p = PLATFORMS[platform];
+  document.getElementById('sheetPlatform').textContent = p.icon + ' ' + platform;
+  document.getElementById('sheetUrl').textContent = url;
+  document.getElementById('urlPreview').style.display = 'block';
+}
+
 function showShareSheet() {
   const sample = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
   document.getElementById('sheetPlatform').textContent = sample.platform;
   document.getElementById('sheetUrl').textContent = sample.url;
+  document.getElementById('sheetUrlInput').value = '';
   document.getElementById('sheetTitle').value = '';
   document.getElementById('sheetNotes').value = '';
+  document.getElementById('urlPreview').style.display = 'none';
   document.getElementById('overlay').classList.add('show');
   setTimeout(() => document.getElementById('shareSheet').classList.add('show'), 10);
 }
@@ -1324,10 +1363,12 @@ function hideShareSheet() {
 }
 
 function saveFromSheet() {
+  const urlInput = document.getElementById('sheetUrlInput').value.trim();
+  if (!urlInput) { showToast('⚠️ الرجاء إدخال رابط', 'var(--error)'); return; }
   const title = document.getElementById('sheetTitle').value.trim();
   const notes = document.getElementById('sheetNotes').value.trim();
-  const url = document.getElementById('sheetUrl').textContent;
-  const platform = document.getElementById('sheetPlatform').textContent;
+  const url = urlInput;
+  const platform = document.getElementById('sheetPlatform').textContent || '🌐 other';
 
   const emojis = ['🎯','📸','🎬','🔗','⭐','🎵','📌','💡','🌟','🔥'];
   const types = ['link','image','video'];
@@ -1347,6 +1388,7 @@ function saveFromSheet() {
   };
 
   items.unshift(newItem);
+  saveItems();
   hideShareSheet();
   renderItems();
   renderSavedList();
@@ -1391,6 +1433,15 @@ function toggleFavDetail() {
   document.getElementById('favDetailText').textContent = item.fav ? 'مفضّلة ✓' : 'مفضلة';
   renderItems();
   showToast(item.fav ? '⭐ أُضيف إلى المفضلة' : 'إزالة من المفضلة');
+}
+
+function openUrl() {
+  if (!currentDetailIndex) return;
+  const item = items.find(i => i.id === currentDetailIndex);
+  if (!item) return;
+  let url = item.url;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  window.open(url, '_blank');
 }
 
 function shareDetail() {

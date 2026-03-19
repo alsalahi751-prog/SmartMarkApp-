@@ -832,7 +832,7 @@ body::before {
         <h2>📌 المحفوظات</h2>
         <p>جميع العناصر المحفوظة مرتبة حسب التاريخ</p>
       </div>
-      <div class="section-title">الأحدث</div>
+      <div class="section-title" id="recentTitle">الأحدث</div>
       <div id="saved-list"></div>
     </div>
 
@@ -840,7 +840,7 @@ body::before {
     <div class="screen" id="screen-folders">
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900">📁 المجلدات</h2>
-        <div class="see-all" onclick="createFolder()">+ جديد</div>
+        <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
       </div>
       <div class="folders-grid" id="folders-grid"></div>
     </div>
@@ -855,14 +855,14 @@ body::before {
       <div class="profile-card">
         <div class="profile-avatar">👤</div>
         <div class="profile-info">
-          <div class="profile-name">قاسم المستخدم</div>
+          <div class="profile-name" id="profileName">قاسم المستخدم</div>
           <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d787e687f4d7e606c7f79606c7f66236c7d7d">[email&#160;protected]</a></div>
           <div class="profile-badge">✨ Pro</div>
         </div>
       </div>
 
       <!-- Language -->
-      <div class="settings-section-title">اللغة</div>
+      <div class="settings-section-title" id="sct_lang">اللغة</div>
       <div class="settings-card">
         <div class="lang-option selected" id="lang-ar" onclick="switchLang('ar')">
           <div class="lang-radio"></div>
@@ -876,57 +876,57 @@ body::before {
       </div>
 
       <!-- Appearance -->
-      <div class="settings-section-title">المظهر</div>
+      <div class="settings-section-title" id="sct_appearance">المظهر</div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-icon" style="background:#1a1a2e">🌙</div>
           <div class="setting-info">
-            <div class="setting-label">الوضع الداكن</div>
-            <div class="setting-desc">تشغيل مفعّل حالياً</div>
+            <div class="setting-label" id="sl_dark">الوضع الداكن</div>
+            <div class="setting-desc" id="sd_dark">تشغيل مفعّل حالياً</div>
           </div>
           <button class="toggle on" onclick="this.classList.toggle('on')"></button>
         </div>
         <div class="setting-row" style="border-bottom:none">
           <div class="setting-icon" style="background:#1a2a1a">🎨</div>
           <div class="setting-info">
-            <div class="setting-label">اللون الأساسي</div>
-            <div class="setting-desc">بنفسجي — Indigo</div>
+            <div class="setting-label" id="sl_color">اللون الأساسي</div>
+            <div class="setting-desc" id="sd_color">بنفسجي — Indigo</div>
           </div>
           <div style="width:28px;height:28px;background:var(--primary);border-radius:8px;cursor:pointer"></div>
         </div>
       </div>
 
       <!-- Sync -->
-      <div class="settings-section-title">المزامنة والتخزين</div>
+      <div class="settings-section-title" id="sct_sync">المزامنة والتخزين</div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-icon" style="background:#0a1a2a">🔄</div>
           <div class="setting-info">
-            <div class="setting-label">مزامنة تلقائية</div>
-            <div class="setting-desc">يتزامن كل 30 دقيقة</div>
+            <div class="setting-label" id="sl_sync">مزامنة تلقائية</div>
+            <div class="setting-desc" id="sd_sync">يتزامن كل 30 دقيقة</div>
           </div>
           <button class="toggle on" onclick="this.classList.toggle('on')"></button>
         </div>
         <div class="setting-row">
           <div class="setting-icon" style="background:#0a1a2a">📶</div>
           <div class="setting-info">
-            <div class="setting-label">Wi-Fi فقط</div>
-            <div class="setting-desc">لا يستهلك بيانات الجوال</div>
+            <div class="setting-label" id="sl_wifi">Wi-Fi فقط</div>
+            <div class="setting-desc" id="sd_wifi">لا يستهلك بيانات الجوال</div>
           </div>
           <button class="toggle" onclick="this.classList.toggle('on')"></button>
         </div>
         <div class="setting-row" style="border-bottom:none">
           <div class="setting-icon" style="background:#1a1a0a">🗑</div>
           <div class="setting-info">
-            <div class="setting-label">مسح ذاكرة التخزين</div>
-            <div class="setting-desc">24 ميغابايت مستخدمة</div>
+            <div class="setting-label" id="sl_clear">مسح ذاكرة التخزين</div>
+            <div class="setting-desc" id="sd_clear">24 ميغابايت مستخدمة</div>
           </div>
-          <div style="font-size:12px;color:var(--error);cursor:pointer;font-weight:700" onclick="showToast('تم مسح ذاكرة التخزين ✓','var(--success)')">مسح</div>
+          <div style="font-size:12px;color:var(--error);cursor:pointer;font-weight:700" onclick="showToast('تم مسح ذاكرة التخزين ✓','var(--success)')" id="btn_clear">مسح</div>
         </div>
       </div>
 
       <!-- About -->
-      <div class="settings-section-title">حول التطبيق</div>
+      <div class="settings-section-title" id="sct_about">حول التطبيق</div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-icon" style="background:#1a0a2a">📱</div>
@@ -945,7 +945,7 @@ body::before {
         <div class="setting-row" style="border-bottom:none">
           <div class="setting-icon" style="background:#2a1a0a">⭐</div>
           <div class="setting-info">
-            <div class="setting-label">قيّم التطبيق</div>
+            <div class="setting-label" id="rateApp">قيّم التطبيق</div>
           </div>
           <div style="color:var(--text3)">›</div>
         </div>
@@ -1115,6 +1115,14 @@ function showApp() {
   renderItems();
   renderSavedList();
   renderFolders();
+  
+  // تطبيق اللغة المحفوظة
+  const savedLang = localStorage.getItem('sm_lang') || 'ar';
+  currentLang = savedLang;
+  document.querySelectorAll('.lang-option').forEach(el => el.classList.remove('selected'));
+  const langEl = document.getElementById('lang-' + savedLang);
+  if (langEl) langEl.classList.add('selected');
+  applyTranslations(savedLang);
 }
 
 // ==========================================
@@ -1213,7 +1221,8 @@ function renderItems() {
   document.getElementById('s1').textContent = items.length;
   document.getElementById('s2').textContent = favCount;
   document.getElementById('s3').textContent = folders.length;
-  document.getElementById('total-count').textContent = `${items.length} عنصر محفوظ`;
+  const t = TRANSLATIONS[currentLang];
+  document.getElementById('total-count').textContent = `${items.length} ${t.totalSaved}`;
 }
 
 function renderSavedList() {
@@ -1237,17 +1246,18 @@ function renderSavedList() {
 
 function renderFolders() {
   const grid = document.getElementById('folders-grid');
+  const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
   grid.innerHTML = folders.map(f => `
     <div class="folder-card" style="--folder-color:${f.color}">
       <div class="folder-icon">${f.icon}</div>
       <div class="folder-name">${f.name}</div>
-      <div class="folder-count">${f.count} عناصر</div>
+      <div class="folder-count">${f.count} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
       <div class="folder-bar" style="background:${f.color};width:${Math.min(100,f.count*20)}%"></div>
     </div>
   `).join('') + `
     <div class="new-folder-card" onclick="createFolder()">
       <span>➕</span>
-      <p>مجلد جديد</p>
+      <p>${newFolderText}</p>
     </div>`;
 }
 
@@ -1478,11 +1488,190 @@ function createFolder() {
 // ==========================================
 // LANGUAGE SWITCH
 // ==========================================
+// قاموس الترجمة
+const TRANSLATIONS = {
+  ar: {
+    appName: 'SmartMark',
+    totalSaved: 'عنصر محفوظ',
+    search: 'ابحث في محفوظاتك...',
+    all: 'الكل',
+    favorites: '⭐ المفضلة',
+    videos: '🎬 فيديو',
+    images: '🖼 صور',
+    links: '🔗 روابط',
+    total: 'إجمالي',
+    fav: 'مفضلة',
+    folders: 'مجلدات',
+    saved: '📌 المحفوظات',
+    savedDesc: 'جميع العناصر المحفوظة مرتبة حسب التاريخ',
+    foldersTitle: '📁 المجلدات',
+    settings: '⚙️ الإعدادات',
+    newFolder: 'مجلد جديد',
+    saveNew: 'حفظ محتوى جديد',
+    pasteUrl: 'الصق الرابط هنا...',
+    titleOpt: 'عنوان (اختياري)',
+    notes: 'ملاحظات…',
+    cancel: 'إلغاء',
+    saveNow: '✓ حفظ الآن',
+    home: 'الرئيسية',
+    language: 'اللغة',
+    darkMode: 'الوضع الداكن',
+    version: 'الإصدار',
+    dir: 'rtl'
+  },
+  en: {
+    appName: 'SmartMark',
+    totalSaved: 'items saved',
+    search: 'Search your saved items...',
+    all: 'All',
+    favorites: '⭐ Favorites',
+    videos: '🎬 Videos',
+    images: '🖼 Images',
+    links: '🔗 Links',
+    total: 'Total',
+    fav: 'Favorites',
+    folders: 'Folders',
+    saved: '📌 Saved',
+    savedDesc: 'All saved items sorted by date',
+    foldersTitle: '📁 Folders',
+    settings: '⚙️ Settings',
+    newFolder: 'New Folder',
+    saveNew: 'Save New Content',
+    pasteUrl: 'Paste link here...',
+    titleOpt: 'Title (optional)',
+    notes: 'Notes...',
+    cancel: 'Cancel',
+    saveNow: '✓ Save Now',
+    home: 'Home',
+    language: 'Language',
+    darkMode: 'Dark Mode',
+    version: 'Version',
+    dir: 'ltr'
+  }
+};
+
+let currentLang = localStorage.getItem('sm_lang') || 'ar';
+
+function applyTranslations(lang) {
+  const t = TRANSLATIONS[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = t.dir;
+
+  // شريط البحث
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.placeholder = t.search;
+
+  // الفلاتر
+  const chips = document.querySelectorAll('.chip');
+  const chipTexts = [t.all, t.favorites, t.videos, t.images, t.links];
+  chips.forEach((chip, i) => { if (chipTexts[i]) chip.textContent = chipTexts[i]; });
+
+  // عناوين التنقل
+  const navLabels = document.querySelectorAll('.nav-item span');
+  const navTexts = [t.home, t.saved, t.folders, t.settings];
+  navLabels.forEach((label, i) => { if (navTexts[i]) label.textContent = navTexts[i]; });
+
+  // نافذة الإضافة
+  const urlInput = document.getElementById('sheetUrlInput');
+  if (urlInput) urlInput.placeholder = t.pasteUrl;
+  const titleInput = document.getElementById('sheetTitle');
+  if (titleInput) titleInput.placeholder = t.titleOpt;
+  const notesInput = document.getElementById('sheetNotes');
+  if (notesInput) notesInput.placeholder = t.notes;
+
+  // عناوين الصفحات
+  const savedHeader = document.querySelector('#screen-saved .saved-header h2');
+  if (savedHeader) savedHeader.textContent = t.saved;
+  const savedDesc = document.querySelector('#screen-saved .saved-header p');
+  if (savedDesc) savedDesc.textContent = t.savedDesc;
+  
+  const foldersHeader = document.querySelector('#screen-folders h2');
+  if (foldersHeader) foldersHeader.textContent = t.foldersTitle;
+  
+  const settingsHeader = document.querySelector('#screen-settings .settings-header h2');
+  if (settingsHeader) settingsHeader.textContent = t.settings;
+
+  // الإعدادات - نصوص
+  const settingLabels = document.querySelectorAll('.setting-label');
+  const settingDescs = document.querySelectorAll('.setting-desc');
+  
+  const settingsTexts = {
+    ar: ['الوضع الداكن','تشغيل مفعّل حالياً','اللون الأساسي','بنفسجي — Indigo','مزامنة تلقائية','يتزامن كل 30 دقيقة','Wi-Fi فقط','لا يستهلك بيانات الجوال','مسح ذاكرة التخزين','24 ميغابايت مستخدمة','الإصدار','SmartMark Pro 1.0.0','سياسة الخصوصية','قيّم التطبيق'],
+    en: ['Dark Mode','Currently enabled','Primary Color','Purple — Indigo','Auto Sync','Syncs every 30 minutes','Wi-Fi Only','No mobile data used','Clear Storage','24 MB used','Version','SmartMark Pro 1.0.0','Privacy Policy','Rate the App']
+  };
+  
+  const labels = settingsTexts[lang];
+  settingLabels.forEach((el, i) => { if (labels[i*2] !== undefined) el.textContent = labels[i*2]; });
+  settingDescs.forEach((el, i) => { if (labels[i*2+1] !== undefined) el.textContent = labels[i*2+1]; });
+
+  // إحصائيات stat-label
+  const statLabels = document.querySelectorAll('.stat-label');
+  const statTexts = lang === 'ar' ? ['إجمالي','مفضلة','مجلدات'] : ['Total','Favorites','Folders'];
+  statLabels.forEach((el, i) => { if (statTexts[i]) el.textContent = statTexts[i]; });
+
+  // زر إنشاء مجلد جديد
+  const newFolderBtn = document.querySelector('.new-folder-card p');
+  if (newFolderBtn) newFolderBtn.textContent = t.newFolder;
+
+  // عنوان نافذة الإضافة
+  const sheetTitle = document.querySelector('.sheet-title');
+  if (sheetTitle) sheetTitle.textContent = t.saveNew;
+
+  // أزرار الإلغاء والحفظ
+  const cancelBtn = document.querySelector('.btn-cancel');
+  if (cancelBtn) cancelBtn.textContent = t.cancel;
+  const saveBtn = document.querySelector('.btn-save');
+  if (saveBtn) saveBtn.textContent = t.saveNow;
+
+  // "الأحدث" في Saved
+  const recentTitle = document.getElementById('recentTitle');
+  if (recentTitle) recentTitle.textContent = lang === 'ar' ? 'الأحدث' : 'Recent';
+
+  // اسم المستخدم
+  const profileName = document.getElementById('profileName');
+  if (profileName) profileName.textContent = lang === 'ar' ? 'قاسم المستخدم' : 'User';
+
+  // قيّم التطبيق
+  const rateApp = document.getElementById('rateApp');
+  if (rateApp) rateApp.textContent = lang === 'ar' ? 'قيّم التطبيق' : 'Rate the App';
+
+  // زر + جديد
+  const btnNewFolder = document.getElementById('btnNewFolder');
+  if (btnNewFolder) btnNewFolder.textContent = lang === 'ar' ? '+ جديد' : '+ New';
+
+  // عناوين أقسام الإعدادات
+  const settingsMap = {
+    'sct_appearance': {ar:'المظهر', en:'Appearance'},
+    'sct_sync': {ar:'المزامنة والتخزين', en:'Sync & Storage'},
+    'sct_about': {ar:'حول التطبيق', en:'About'},
+    'sl_dark': {ar:'الوضع الداكن', en:'Dark Mode'},
+    'sd_dark': {ar:'تشغيل مفعّل حالياً', en:'Currently enabled'},
+    'sl_color': {ar:'اللون الأساسي', en:'Primary Color'},
+    'sd_color': {ar:'بنفسجي — Indigo', en:'Purple — Indigo'},
+    'sl_sync': {ar:'مزامنة تلقائية', en:'Auto Sync'},
+    'sd_sync': {ar:'يتزامن كل 30 دقيقة', en:'Syncs every 30 min'},
+    'sl_wifi': {ar:'Wi-Fi فقط', en:'Wi-Fi Only'},
+    'sd_wifi': {ar:'لا يستهلك بيانات الجوال', en:'No mobile data used'},
+    'sl_clear': {ar:'مسح ذاكرة التخزين', en:'Clear Storage'},
+    'sd_clear': {ar:'24 ميغابايت مستخدمة', en:'24 MB used'},
+    'sct_lang': {ar:'اللغة', en:'Language'},
+    'btn_clear': {ar:'مسح', en:'Clear'},
+  };
+  Object.keys(settingsMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = settingsMap[id][lang] || settingsMap[id]['ar'];
+  });
+
+  // إعادة رسم القوائم
+  if (typeof renderItems === 'function') { renderItems(); renderSavedList(); renderFolders(); }
+}
+
 function switchLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('sm_lang', lang);
   document.querySelectorAll('.lang-option').forEach(el => el.classList.remove('selected'));
   document.getElementById('lang-' + lang).classList.add('selected');
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  applyTranslations(lang);
   showToast(lang === 'ar' ? '🇸🇦 تم تغيير اللغة إلى العربية' : '🇺🇸 Language changed to English');
 }
 

@@ -788,8 +788,8 @@ body::before {
 <!-- ==========================================
      EDIT ITEM SHEET
 =========================================== -->
-<div class="overlay" id="editOverlay"></div>
-<div class="bottom-sheet" id="editSheet" style="z-index:502">
+<div class="overlay" id="editOverlay" style="z-index:649"></div>
+<div class="bottom-sheet" id="editSheet" style="z-index:650">
   <div class="sheet-handle"></div>
   <div class="sheet-title" id="editSheetTitle">✏️ تعديل العنصر</div>
   
@@ -828,7 +828,7 @@ body::before {
   <div id="pinError" style="color:var(--error);font-size:13px;min-height:20px;font-weight:700"></div>
   
   <!-- Numpad -->
-  <div id="numpad" style="display:grid;grid-template-columns:80px 80px 80px;gap:12px;width:260px">
+  <div id="numpad" style="display:grid;grid-template-columns:80px 80px 80px;gap:12px;width:260px;direction:ltr">
     <button class="pin-btn" onclick="pinInput('1')">1</button>
     <button class="pin-btn" onclick="pinInput('2')">2</button>
     <button class="pin-btn" onclick="pinInput('3')">3</button>
@@ -901,6 +901,7 @@ body::before {
           <span id="total-count">۲۴ عنصر محفوظ</span>
         </div>
         <div class="header-actions">
+          <div class="icon-btn" onclick="toggleSelectMode()" title="تحديد" id="selectModeBtn">☑</div>
           <div class="icon-btn" onclick="toggleView()" title="تبديل العرض" id="viewToggleBtn">⊞</div>
           <div class="icon-btn" onclick="showShareSheet()" title="حفظ جديد">＋</div>
         </div>
@@ -909,6 +910,16 @@ body::before {
       <div class="search-box">
         <span style="font-size:18px;color:var(--text3)">🔍</span>
         <input type="text" id="searchInput" placeholder="ابحث في محفوظاتك…" oninput="filterItems()" />
+      </div>
+
+      <!-- شريط أدوات التحديد المتعدد -->
+      <div id="selectionBar" style="display:none;padding:10px 20px;background:var(--primary);align-items:center;justify-content:space-between;flex-direction:row-reverse">
+        <div style="color:#fff;font-weight:700;font-size:14px" id="selectionCount">0 محدد</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="deleteSelected()" style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer" id="btnDeleteSelected">🗑 حذف</button>
+          <button onclick="moveSelected()" style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer" id="btnMoveSelected">📂 نقل</button>
+          <button onclick="cancelSelect()" style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✕</button>
+        </div>
       </div>
 
       <div class="filter-chips">
@@ -982,7 +993,17 @@ body::before {
                style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-size:18px;font-weight:700;font-family:system-ui,Tahoma,Arial,sans-serif;text-align:right;margin:0 12px"/>
         <button onclick="saveCurrentNote()" style="background:var(--primary);border:none;padding:8px 16px;border-radius:10px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer" id="btnSaveNote">حفظ</button>
       </div>
-      <div style="padding:8px 20px;border-bottom:1px solid var(--border)">
+      <div style="padding:8px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse">
+        <div style="display:flex;gap:6px">
+          <button onclick="formatNote('bold')" title="غامق" 
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-weight:900;font-size:16px;cursor:pointer">B</button>
+          <button onclick="formatNote('italic')" title="مائل"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-style:italic;font-size:16px;cursor:pointer">I</button>
+          <button onclick="changeFontSize(-2)" title="تصغير الخط"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:16px;cursor:pointer">A-</button>
+          <button onclick="changeFontSize(2)" title="تكبير الخط"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:18px;font-weight:700;cursor:pointer">A+</button>
+        </div>
         <span id="noteAutoSave" style="font-size:11px;color:var(--text3)">سيتم الحفظ تلقائياً</span>
       </div>
       <textarea id="noteContent" 
@@ -1402,7 +1423,10 @@ function renderItems() {
 
   const p = PLATFORMS;
   container.innerHTML = filtered.map((item, idx) => `
-    <div class="item-card" onclick="openDetail(${item.id})">
+    <div class="item-card" 
+         onclick="${selectMode ? `toggleItemSelect(${item.id}, event)` : `openDetail(${item.id})`}"
+         style="${selectedItems.has(item.id) ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
+      ${selectMode ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${selectedItems.has(item.id) ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;z-index:10">${selectedItems.has(item.id) ? '✓' : ''}</div>` : ''}
       <div class="item-thumb ${p[item.platform].class}">
         <span style="font-size:40px">${item.emoji}</span>
         <div class="platform-badge" style="background:${p[item.platform].color}">${p[item.platform].icon}</div>
@@ -2195,13 +2219,18 @@ function saveEdit() {
   const item = items.find(i => i.id === currentDetailIndex);
   if (!item) return;
   
-  item.title = document.getElementById('editTitle').value.trim() || item.title;
+  const newTitle = document.getElementById('editTitle').value.trim();
+  if (newTitle) item.title = newTitle;
   item.notes = document.getElementById('editNotes').value.trim();
   if (selectedMoveFolder !== undefined) item.folderId = selectedMoveFolder;
   
   saveItems();
   closeEdit();
-  closeDetail();
+  
+  // تحديث التفاصيل المفتوحة
+  document.getElementById('detailTitle').textContent = item.title;
+  document.getElementById('detailNotes').textContent = item.notes || '—';
+  
   renderItems();
   renderSavedList();
   showToast(currentLang === 'ar' ? '✓ تم التعديل' : '✓ Updated');
@@ -2322,6 +2351,112 @@ function deleteNote(id) {
   saveNotes();
   renderNotes();
   showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+}
+
+// ==========================================
+// NOTE FORMATTING
+// ==========================================
+let noteFontSize = 15;
+
+function formatNote(type) {
+  const textarea = document.getElementById('noteContent');
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = textarea.value.substring(start, end);
+  if (!selected) return;
+  
+  let formatted = selected;
+  if (type === 'bold') formatted = `**${selected}**`;
+  if (type === 'italic') formatted = `_${selected}_`;
+  
+  textarea.value = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
+  autoSaveNote();
+}
+
+function changeFontSize(delta) {
+  noteFontSize = Math.max(12, Math.min(24, noteFontSize + delta));
+  document.getElementById('noteContent').style.fontSize = noteFontSize + 'px';
+}
+
+// ==========================================
+// MULTI SELECT
+// ==========================================
+let selectMode = false;
+let selectedItems = new Set();
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedItems.clear();
+  const btn = document.getElementById('selectModeBtn');
+  const bar = document.getElementById('selectionBar');
+  if (selectMode) {
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    bar.style.display = 'flex';
+    showToast(currentLang === 'ar' ? 'اضغط على العناصر لتحديدها' : 'Tap items to select');
+  } else {
+    cancelSelect();
+  }
+  renderItems();
+}
+
+function cancelSelect() {
+  selectMode = false;
+  selectedItems.clear();
+  const btn = document.getElementById('selectModeBtn');
+  btn.style.background = '';
+  btn.style.color = '';
+  document.getElementById('selectionBar').style.display = 'none';
+  renderItems();
+}
+
+function toggleItemSelect(id, event) {
+  event.stopPropagation();
+  if (selectedItems.has(id)) {
+    selectedItems.delete(id);
+  } else {
+    selectedItems.add(id);
+  }
+  updateSelectionCount();
+  renderItems();
+}
+
+function updateSelectionCount() {
+  const count = selectedItems.size;
+  const el = document.getElementById('selectionCount');
+  if (el) el.textContent = currentLang === 'ar' ? `${count} محدد` : `${count} selected`;
+}
+
+function deleteSelected() {
+  if (selectedItems.size === 0) return;
+  const msg = currentLang === 'ar' 
+    ? `حذف ${selectedItems.size} عنصر؟` 
+    : `Delete ${selectedItems.size} items?`;
+  if (!confirm(msg)) return;
+  items = items.filter(i => !selectedItems.has(i.id));
+  saveItems();
+  cancelSelect();
+  renderItems();
+  renderSavedList();
+  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+}
+
+function moveSelected() {
+  if (selectedItems.size === 0) return;
+  const folderName = prompt(currentLang === 'ar' ? 'اسم المجلد للنقل إليه:' : 'Folder name to move to:');
+  if (!folderName) return;
+  const folder = folders.find(f => f.name === folderName);
+  if (!folder) {
+    showToast(currentLang === 'ar' ? '❌ المجلد غير موجود' : '❌ Folder not found', 'var(--error)');
+    return;
+  }
+  items.forEach(i => {
+    if (selectedItems.has(i.id)) i.folderId = folder.id;
+  });
+  saveItems();
+  cancelSelect();
+  renderItems();
+  showToast(currentLang === 'ar' ? '📂 تم النقل' : '📂 Moved');
 }
 
 // ==========================================

@@ -788,7 +788,7 @@ body::before {
 <!-- ==========================================
      EDIT ITEM SHEET
 =========================================== -->
-<div class="overlay" id="editOverlay" onclick="closeEdit()"></div>
+<div class="overlay" id="editOverlay"></div>
 <div class="bottom-sheet" id="editSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title" id="editSheetTitle">✏️ تعديل العنصر</div>
@@ -838,9 +838,9 @@ body::before {
     <button class="pin-btn" onclick="pinInput('7')">7</button>
     <button class="pin-btn" onclick="pinInput('8')">8</button>
     <button class="pin-btn" onclick="pinInput('9')">9</button>
-    <button class="pin-btn" onclick="pinBiometric()" id="btnBiometric" style="font-size:22px">👆</button>
-    <button class="pin-btn" onclick="pinInput('0')">0</button>
     <button class="pin-btn" onclick="pinDelete()" style="font-size:20px">⌫</button>
+    <button class="pin-btn" onclick="pinInput('0')">0</button>
+    <button class="pin-btn" onclick="pinBiometric()" id="btnBiometric" style="font-size:22px">👆</button>
   </div>
   
   <!-- Biometric button -->
@@ -1309,6 +1309,9 @@ function showApp() {
   renderSavedList();
   renderFolders();
   
+  // تحميل المجلدات
+  loadFolders();
+
   // تحميل المذكرات
   loadNotes();
   renderNotes();
@@ -1453,11 +1456,11 @@ function renderFolders() {
   const grid = document.getElementById('folders-grid');
   const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
   grid.innerHTML = folders.map(f => `
-    <div class="folder-card" style="--folder-color:${f.color}">
+    <div class="folder-card" style="--folder-color:${f.color}" onclick="openFolder(${f.id})">
       <div class="folder-icon">${f.icon}</div>
       <div class="folder-name">${f.name}</div>
-      <div class="folder-count">${f.count} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
-      <div class="folder-bar" style="background:${f.color};width:${Math.min(100,f.count*20)}%"></div>
+      <div class="folder-count">${items.filter(i=>i.folderId===f.id).length} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
+      <div class="folder-bar" style="background:${f.color};width:${Math.min(100,items.filter(i=>i.folderId===f.id).length*20)}%"></div>
     </div>
   `).join('') + `
     <div class="new-folder-card" onclick="createFolder()">
@@ -1756,8 +1759,61 @@ function deleteDetail() {
 // ==========================================
 // FOLDERS
 // ==========================================
+function saveFolders() {
+  try { localStorage.setItem('sm_folders', JSON.stringify(folders)); } catch(e) {}
+}
+
+function loadFolders() {
+  try {
+    const d = localStorage.getItem('sm_folders');
+    if (d) {
+      const saved = JSON.parse(d);
+      if (saved && saved.length > 0) folders = saved;
+    }
+  } catch(e) {}
+}
+
+function openFolder(folderId) {
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  // تصفية العناصر حسب المجلد
+  activeFilter = 'all';
+  switchScreen('home');
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.chip').classList.add('active');
+  // تغيير عنوان الصفحة مؤقتاً
+  document.querySelector('.header-brand h1').textContent = folder.icon + ' ' + folder.name;
+  // عرض عناصر المجلد فقط
+  const container = document.getElementById('items-container');
+  const folderItems = items.filter(i => i.folderId === folderId);
+  if (folderItems.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:span 2">
+      <div class="emoji">${folder.icon}</div>
+      <h3>${currentLang === 'ar' ? 'المجلد فارغ' : 'Empty folder'}</h3>
+      <p>${currentLang === 'ar' ? 'لا توجد عناصر في هذا المجلد' : 'No items in this folder'}</p>
+    </div>`;
+    return;
+  }
+  const p = PLATFORMS;
+  container.innerHTML = folderItems.map(item => `
+    <div class="item-card" onclick="openDetail(${item.id})">
+      <div class="item-thumb ${p[item.platform].class}">
+        <span style="font-size:40px">${item.emoji}</span>
+        <div class="platform-badge" style="background:${p[item.platform].color}">${p[item.platform].icon}</div>
+      </div>
+      <div class="item-body">
+        <div class="item-title">${item.title}</div>
+        <div class="item-meta">
+          <div class="item-date">${item.date}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
 function createFolder() {
-  const name = prompt('اسم المجلد الجديد:');
+  const promptText = currentLang === 'ar' ? 'اسم المجلد الجديد:' : 'New folder name:';
+  const name = prompt(promptText);
   if (!name) return;
   const icons = ['📁','🎯','💡','🔥','❤️','🌟','📚','🎬','🎵','🏆'];
   const colors = ['#6366f1','#06b6d4','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899'];
@@ -1767,8 +1823,9 @@ function createFolder() {
     color: colors[Math.floor(Math.random()*colors.length)],
     count: 0
   });
+  saveFolders();
   renderFolders();
-  showToast('📁 تم إنشاء المجلد');
+  showToast(currentLang === 'ar' ? '📁 تم إنشاء المجلد' : '📁 Folder created');
 }
 
 // ==========================================
@@ -2023,7 +2080,24 @@ function showToast(msg, bg) {
 
 // Keyboard nav
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeDetail(); hideShareSheet(); }
+  if (e.key === 'Escape') { closeDetail(); hideShareSheet(); closeEdit(); }
+});
+
+// زر الرجوع في أندرويد
+document.addEventListener('backbutton', () => {
+  if (document.getElementById('lockScreen').style.display === 'flex') return;
+  if (document.getElementById('detailView').classList.contains('show')) { closeDetail(); return; }
+  if (document.getElementById('editSheet').classList.contains('show')) { closeEdit(); return; }
+  if (document.getElementById('shareSheet').classList.contains('show')) { hideShareSheet(); return; }
+  if (document.getElementById('noteEditor').style.display === 'flex') { closeNote(); return; }
+});
+
+// دعم زر الرجوع في المتصفح
+window.addEventListener('popstate', () => {
+  if (document.getElementById('detailView').classList.contains('show')) { closeDetail(); return; }
+  if (document.getElementById('editSheet').classList.contains('show')) { closeEdit(); return; }
+  if (document.getElementById('shareSheet').classList.contains('show')) { hideShareSheet(); return; }
+  if (document.getElementById('noteEditor').style.display === 'flex') { closeNote(); return; }
 });
 
 // ==========================================
@@ -2036,12 +2110,17 @@ function editDetail() {
   
   document.getElementById('editTitle').value = item.title;
   document.getElementById('editNotes').value = item.notes || '';
+  selectedMoveFolder = item.folderId;
   
   // بناء قائمة المجلدات
   buildFolderMoveList(item.folderId);
   
-  document.getElementById('editOverlay').classList.add('show');
-  setTimeout(() => document.getElementById('editSheet').classList.add('show'), 10);
+  const overlay = document.getElementById('editOverlay');
+  const sheet = document.getElementById('editSheet');
+  overlay.style.display = 'block';
+  overlay.classList.add('show');
+  sheet.style.display = 'block';
+  setTimeout(() => sheet.classList.add('show'), 10);
 }
 
 function buildFolderMoveList(currentFolderId) {
@@ -2081,8 +2160,14 @@ function selectMoveFolder(folderId, el) {
 }
 
 function closeEdit() {
-  document.getElementById('editSheet').classList.remove('show');
-  document.getElementById('editOverlay').classList.remove('show');
+  const sheet = document.getElementById('editSheet');
+  const overlay = document.getElementById('editOverlay');
+  sheet.classList.remove('show');
+  overlay.classList.remove('show');
+  setTimeout(() => {
+    sheet.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 350);
   selectedMoveFolder = undefined;
 }
 

@@ -747,6 +747,12 @@ body::before {
 .pin-btn:hover { background: var(--bg4); transform: scale(1.05); }
 .pin-btn:active { transform: scale(0.95); background: var(--primary-glow); }
 
+#noteContent:empty:before {
+  content: attr(data-placeholder);
+  color: var(--text3);
+  pointer-events: none;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -991,25 +997,29 @@ body::before {
         <button onclick="closeNote()" style="background:var(--bg3);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;color:var(--text1);font-size:18px;cursor:pointer">✕</button>
         <input id="noteTitleInput" placeholder="عنوان المذكرة..." 
                style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-size:18px;font-weight:700;font-family:system-ui,Tahoma,Arial,sans-serif;text-align:right;margin:0 12px"/>
-        <button onclick="saveCurrentNote()" style="background:var(--primary);border:none;padding:8px 16px;border-radius:10px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer" id="btnSaveNote">حفظ</button>
+
       </div>
       <div style="padding:8px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse">
-        <div style="display:flex;gap:6px">
-          <button onclick="formatNote('bold')" title="غامق" 
-                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-weight:900;font-size:16px;cursor:pointer">B</button>
-          <button onclick="formatNote('italic')" title="مائل"
-                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-style:italic;font-size:16px;cursor:pointer">I</button>
-          <button onclick="changeFontSize(-2)" title="تصغير الخط"
-                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:16px;cursor:pointer">A-</button>
-          <button onclick="changeFontSize(2)" title="تكبير الخط"
-                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:18px;font-weight:700;cursor:pointer">A+</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onmousedown="event.preventDefault();formatNote('bold')" title="غامق" 
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-weight:900;font-size:15px;cursor:pointer">B</button>
+          <button onmousedown="event.preventDefault();formatNote('italic')" title="مائل"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-style:italic;font-size:15px;cursor:pointer">I</button>
+          <button onmousedown="event.preventDefault();formatNote('underline')" title="تسطير"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);text-decoration:underline;font-size:15px;cursor:pointer">U</button>
+          <button onmousedown="event.preventDefault();changeFontSize(-2)" title="تصغير"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:14px;cursor:pointer">A-</button>
+          <button onmousedown="event.preventDefault();changeFontSize(2)" title="تكبير"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:17px;font-weight:700;cursor:pointer">A+</button>
+          <button onmousedown="event.preventDefault();undoNote()" title="تراجع"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:16px;cursor:pointer">↩</button>
         </div>
-        <span id="noteAutoSave" style="font-size:11px;color:var(--text3)">سيتم الحفظ تلقائياً</span>
+        <span id="noteAutoSave" style="font-size:11px;color:var(--text3)">يتم الحفظ تلقائياً ✓</span>
       </div>
-      <textarea id="noteContent" 
-                style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-size:15px;font-family:system-ui,Tahoma,Arial,sans-serif;padding:20px;resize:none;line-height:1.8;text-align:right;direction:rtl"
-                placeholder="اكتب مذكرتك هنا..."
-                oninput="autoSaveNote()"></textarea>
+      <div id="noteContent" contenteditable="true"
+           style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-size:15px;font-family:system-ui,Tahoma,Arial,sans-serif;padding:20px;line-height:1.8;text-align:right;direction:rtl;overflow-y:auto;min-height:200px"
+           oninput="autoSaveNote()"
+           data-placeholder="اكتب مذكرتك هنا..."></div>
     </div>
 
     <!-- ===== SETTINGS SCREEN ===== -->
@@ -2279,7 +2289,7 @@ function renderNotes(filter = '') {
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
       </div>
       <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
-        ${note.content || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
+        ${note.contentText || note.content?.replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:left">${note.date}</div>
     </div>
@@ -2294,7 +2304,7 @@ function filterNotes() {
 function addNote() {
   currentNoteId = Date.now();
   document.getElementById('noteTitleInput').value = '';
-  document.getElementById('noteContent').value = '';
+  document.getElementById('noteContent').innerHTML = '';
   document.getElementById('noteAutoSave').textContent = currentLang === 'ar' ? 'سيتم الحفظ تلقائياً' : 'Auto-save enabled';
   document.getElementById('noteEditor').style.display = 'flex';
   setTimeout(() => document.getElementById('noteContent').focus(), 100);
@@ -2305,7 +2315,8 @@ function openNote(id) {
   if (!note) return;
   currentNoteId = id;
   document.getElementById('noteTitleInput').value = note.title;
-  document.getElementById('noteContent').value = note.content;
+  const noteEl = document.getElementById('noteContent');
+  noteEl.innerHTML = note.content || '';
   document.getElementById('noteAutoSave').textContent = currentLang === 'ar' ? 'محفوظ ✓' : 'Saved ✓';
   document.getElementById('noteEditor').style.display = 'flex';
 }
@@ -2319,14 +2330,17 @@ function closeNote() {
 
 function saveCurrentNote() {
   const title = document.getElementById('noteTitleInput').value.trim();
-  const content = document.getElementById('noteContent').value.trim();
-  if (!title && !content) return;
+  const noteEl = document.getElementById('noteContent');
+  const noteText = noteEl.innerText.trim();
+  const noteHtml = noteEl.innerHTML;
+  if (!title && !noteText) return;
 
   const existing = notes.findIndex(n => n.id === currentNoteId);
   const noteData = {
     id: currentNoteId,
     title,
-    content,
+    content: noteEl.innerHTML,
+    contentText: noteEl.innerText,
     date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')
   };
 
@@ -2359,17 +2373,14 @@ function deleteNote(id) {
 let noteFontSize = 15;
 
 function formatNote(type) {
-  const textarea = document.getElementById('noteContent');
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const selected = textarea.value.substring(start, end);
-  if (!selected) return;
-  
-  let formatted = selected;
-  if (type === 'bold') formatted = `**${selected}**`;
-  if (type === 'italic') formatted = `_${selected}_`;
-  
-  textarea.value = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
+  document.getElementById('noteContent').focus();
+  document.execCommand(type, false, null);
+  autoSaveNote();
+}
+
+function undoNote() {
+  document.getElementById('noteContent').focus();
+  document.execCommand('undo', false, null);
   autoSaveNote();
 }
 

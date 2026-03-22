@@ -1143,12 +1143,12 @@ body::before {
           <button class="toggle" onclick="this.classList.toggle('on')"></button>
         </div>
         <div class="setting-row" style="border-bottom:none">
-          <div class="setting-icon" style="background:#1a1a0a">🗑</div>
+          <div class="setting-icon" style="background:#1a1a0a">💾</div>
           <div class="setting-info">
             <div class="setting-label" id="sl_clear">مسح ذاكرة التخزين</div>
             <div class="setting-desc" id="sd_clear">24 ميغابايت مستخدمة</div>
           </div>
-          <div style="font-size:20px;cursor:pointer" onclick="clearStorage()">🗑</div>
+          <button onclick="clearStorage()" style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer" id="btn_clear_action">مسح</button>
         </div>
       </div>
 
@@ -1356,6 +1356,20 @@ let folders = [
 // ==========================================
 // SPLASH → ONBOARDING → APP
 // ==========================================
+function clearStorage() {
+  const msg = currentLang === 'ar' 
+    ? 'سيتم مسح ذاكرة التخزين المؤقت فقط\nلن تُحذف بياناتك\nهل تريد المتابعة؟'
+    : 'Clear temporary cache only\nYour data will not be deleted\nContinue?';
+  if (!confirm(msg)) return;
+  
+  const keysToKeep = ['sm_items','sm_folders','sm_notes','sm_lang','sm_theme','sm_pin','sm_ob_done'];
+  Object.keys(localStorage).forEach(key => {
+    if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+  });
+  
+  showToast(currentLang === 'ar' ? '✓ تم مسح ذاكرة التخزين' : '✓ Cache cleared', 'var(--success)');
+}
+
 window.onload = () => {
   updateClock();
   setInterval(updateClock, 60000);
@@ -2351,15 +2365,20 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeDetail(); hideShareSheet(); closeEdit(); }
 });
 
-// زر الرجوع في أندرويد - Capacitor
-document.addEventListener('backbutton', handleBack, false);
-
-// دعم إضافي عبر Capacitor App Plugin
-if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-  try {
-    Capacitor.Plugins.App.addListener('backButton', handleBack);
-  } catch(e) {}
-}
+// زر الرجوع في أندرويد - Capacitor App Plugin
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    try {
+      window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
+        handleBack();
+      });
+    } catch(e) {
+      document.addEventListener('backbutton', handleBack, false);
+    }
+  } else {
+    document.addEventListener('backbutton', handleBack, false);
+  }
+});
 
 function handleBack() {
   if (document.getElementById('lockScreen') && 

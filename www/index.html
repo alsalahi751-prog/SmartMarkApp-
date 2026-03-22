@@ -1607,25 +1607,23 @@ function cancelSavedSelect() {
   savedSelectMode = false;
   savedSelectedItems.clear();
   document.getElementById('savedSelectionBar').style.display = 'none';
-  const btn = document.getElementById('btnSavedSelect');
-  btn.style.background = 'var(--bg3)';
-  btn.style.color = 'var(--text2)';
-  btn.style.borderColor = 'var(--border)';
   renderSavedList();
 }
 
 function deleteSelectedSaved() {
-  if (savedSelectedItems.size === 0) return;
-  const msg = currentLang === 'ar' 
-    ? `حذف ${savedSelectedItems.size} عنصر؟` 
-    : `Delete ${savedSelectedItems.size} items?`;
-  if (!confirm(msg)) return;
-  items = items.filter(i => !savedSelectedItems.has(i.id));
+  if (savedSelectedItems.size === 0) {
+    showToast(currentLang === 'ar' ? '⚠️ لم تحدد أي عنصر' : '⚠️ No items selected', 'var(--error)');
+    return;
+  }
+  const count = savedSelectedItems.size;
+  if (!confirm(currentLang === 'ar' ? `حذف ${count} عنصر؟` : `Delete ${count} items?`)) return;
+  const toDelete = new Set(savedSelectedItems);
+  items = items.filter(i => !toDelete.has(i.id));
   saveItems();
   cancelSavedSelect();
   renderSavedList();
   renderItems();
-  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} عنصر` : `🗑 ${count} items deleted`);
 }
 
 function moveSelectedSaved() {
@@ -1976,21 +1974,27 @@ function loadFolders() {
 function openFolder(folderId) {
   const folder = folders.find(f => f.id === folderId);
   if (!folder) return;
-  // البقاء في تبويب المجلدات
   switchScreen('folders');
-  // عرض عناصر المجلد فقط
-  const container = document.getElementById('items-container');
+  
+  const grid = document.getElementById('folders-grid');
   const folderItems = items.filter(i => i.folderId === folderId);
+  const p = PLATFORMS;
+  
+  const backBtn = `<div style="grid-column:span 2;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-direction:row-reverse">
+    <div style="font-size:18px;font-weight:800">${folder.icon} ${folder.name}</div>
+    <button onclick="renderFolders()" style="background:var(--bg3);border:1px solid var(--border);padding:8px 16px;border-radius:10px;color:var(--text1);font-family:system-ui,Tahoma,Arial,sans-serif;cursor:pointer;font-size:13px">← ${currentLang === 'ar' ? 'رجوع' : 'Back'}</button>
+  </div>`;
+
   if (folderItems.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:span 2">
+    grid.innerHTML = backBtn + `<div class="empty-state" style="grid-column:span 2">
       <div class="emoji">${folder.icon}</div>
       <h3>${currentLang === 'ar' ? 'المجلد فارغ' : 'Empty folder'}</h3>
       <p>${currentLang === 'ar' ? 'لا توجد عناصر في هذا المجلد' : 'No items in this folder'}</p>
     </div>`;
     return;
   }
-  const p = PLATFORMS;
-  container.innerHTML = folderItems.map(item => `
+
+  grid.innerHTML = backBtn + folderItems.map(item => `
     <div class="item-card" onclick="openDetail(${item.id})">
       <div class="item-thumb ${p[item.platform].class}">
         <span style="font-size:40px">${item.emoji}</span>
@@ -1998,9 +2002,7 @@ function openFolder(folderId) {
       </div>
       <div class="item-body">
         <div class="item-title">${item.title}</div>
-        <div class="item-meta">
-          <div class="item-date">${item.date}</div>
-        </div>
+        <div class="item-meta"><div class="item-date">${item.date}</div></div>
       </div>
     </div>
   `).join('');
@@ -2367,7 +2369,7 @@ function showToast(msg, bg) {
   t.textContent = msg;
   if (bg) t.style.background = bg;
   else t.style.background = 'var(--success)';
-  t.classsList.add('show');
+  t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 

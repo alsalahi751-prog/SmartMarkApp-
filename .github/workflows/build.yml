@@ -1,4 +1,3 @@
-build.yml:
 name: Build SmartMark APK
 
 on:
@@ -23,7 +22,7 @@ jobs:
       - name: Install Capacitor v5
         run: |
           npm init -y
-          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/app@5
+          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
 
       - name: Setup Android project
         run: |

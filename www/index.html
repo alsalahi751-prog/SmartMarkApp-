@@ -815,6 +815,35 @@ body::before {
 </div>
 
 <!-- ==========================================
+     NEW FOLDER SHEET
+=========================================== -->
+<div class="overlay" id="folderOverlay" onclick="closeFolderSheet()"></div>
+<div class="bottom-sheet" id="folderSheet" style="z-index:502">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="folderSheetTitle">📁 مجلد جديد</div>
+  
+  <!-- اسم المجلد -->
+  <input class="sheet-input" type="text" id="folderNameInput" placeholder="اسم المجلد..." />
+  
+  <!-- اختيار الأيقونة -->
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:700" id="folderIconLabel">اختر أيقونة:</div>
+    <div id="folderIconPicker" style="display:flex;flex-wrap:wrap;gap:8px;background:var(--bg3);padding:12px;border-radius:12px;border:1px solid var(--border)"></div>
+  </div>
+  
+  <!-- اختيار اللون -->
+  <div style="margin-bottom:16px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:700" id="folderColorLabel">اختر لوناً:</div>
+    <div id="folderColorPicker" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+  </div>
+  
+  <div class="sheet-btns">
+    <button class="btn-cancel" onclick="closeFolderSheet()" id="btnFolderCancel">إلغاء</button>
+    <button class="btn-save" onclick="saveFolderSheet()" id="btnFolderSave">✓ إنشاء</button>
+  </div>
+</div>
+
+<!-- ==========================================
      LOCK SCREEN
 =========================================== -->
 <div id="lockScreen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8000;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
@@ -907,8 +936,7 @@ body::before {
           <span id="total-count">۲۴ عنصر محفوظ</span>
         </div>
         <div class="header-actions">
-          <div class="icon-btn" onclick="toggleSelectMode()" title="تحديد" id="selectModeBtn">☑</div>
-          <div class="icon-btn" onclick="toggleView()" title="تبديل العرض" id="viewToggleBtn">⊞</div>
+<div class="icon-btn" onclick="toggleView()" title="تبديل العرض" id="viewToggleBtn">⊞</div>
           <div class="icon-btn" onclick="showShareSheet()" title="حفظ جديد">＋</div>
         </div>
       </div>
@@ -956,10 +984,32 @@ body::before {
 
     <!-- ===== SAVED SCREEN ===== -->
     <div class="screen" id="screen-saved">
-      <div class="saved-header">
-        <h2>📌 المحفوظات</h2>
-        <p>جميع العناصر المحفوظة مرتبة حسب التاريخ</p>
+      <div class="saved-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-direction:row-reverse">
+        <div>
+          <h2 id="savedTitle">📌 المحفوظات</h2>
+          <p id="savedDesc">جميع العناصر المحفوظة مرتبة حسب التاريخ</p>
+        </div>
+        <button onclick="toggleSavedSelect()" id="btnSavedSelect"
+                style="background:var(--bg3);border:1px solid var(--border);padding:8px 14px;border-radius:10px;color:var(--text2);font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px">
+          ☑ <span id="btnSavedSelectText">تحديد</span>
+        </button>
       </div>
+
+      <!-- شريط أدوات التحديد -->
+      <div id="savedSelectionBar" style="display:none;padding:10px 20px;background:var(--primary);align-items:center;justify-content:space-between;flex-direction:row-reverse;margin-top:8px">
+        <div style="color:#fff;font-weight:700;font-size:14px" id="savedSelectionCount">0 محدد</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="deleteSelectedSaved()" 
+                  style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer" 
+                  id="btnDeleteSaved">🗑 حذف</button>
+          <button onclick="moveSelectedSaved()" 
+                  style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer"
+                  id="btnMoveSaved">📂 نقل</button>
+          <button onclick="cancelSavedSelect()" 
+                  style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✕</button>
+        </div>
+      </div>
+
       <div class="section-title" id="recentTitle">الأحدث</div>
       <div id="saved-list"></div>
     </div>
@@ -1098,7 +1148,7 @@ body::before {
             <div class="setting-label" id="sl_clear">مسح ذاكرة التخزين</div>
             <div class="setting-desc" id="sd_clear">24 ميغابايت مستخدمة</div>
           </div>
-          <div style="font-size:12px;color:var(--error);cursor:pointer;font-weight:700" onclick="showToast('تم مسح ذاكرة التخزين ✓','var(--success)')" id="btn_clear">مسح</div>
+          <div style="font-size:20px;cursor:pointer" onclick="clearStorage()">🗑</div>
         </div>
       </div>
 
@@ -1171,7 +1221,7 @@ body::before {
     </button>
     <button class="nav-item" id="nav-settings" onclick="switchScreen('settings')">
       <div class="nav-icon">⚙️</div>
-      <span>الإعدادات</span>
+      <span id="nav-settings-label">الإعدادات</span>
     </button>
   </nav>
 
@@ -1467,11 +1517,22 @@ function renderItems() {
   document.getElementById('total-count').textContent = `${items.length} ${t.totalSaved}`;
 }
 
+let savedSelectMode = false;
+let savedSelectedItems = new Set();
+
 function renderSavedList() {
   const container = document.getElementById('saved-list');
   const p = PLATFORMS;
   container.innerHTML = items.map(item => `
-    <div class="list-item" onclick="openDetail(${item.id})">
+    <div class="list-item" 
+         onclick="${savedSelectMode ? `toggleSavedItem(${item.id})` : `openDetail(${item.id})`}"
+         style="${savedSelectedItems.has(item.id) ? 'background:var(--primary-glow);border-right:3px solid var(--primary)' : ''}">
+      ${savedSelectMode ? `
+        <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
+                    background:${savedSelectedItems.has(item.id) ? 'var(--primary)' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0">
+          ${savedSelectedItems.has(item.id) ? '✓' : ''}
+        </div>` : ''}
       <div class="list-thumb ${p[item.platform].class}">
         <span>${item.emoji}</span>
       </div>
@@ -1484,6 +1545,83 @@ function renderSavedList() {
       }">${item.type==='video'?'🎬':item.type==='image'?'🖼':'🔗'}</div>
     </div>
   `).join('');
+}
+
+function toggleSavedSelect() {
+  savedSelectMode = !savedSelectMode;
+  savedSelectedItems.clear();
+  const bar = document.getElementById('savedSelectionBar');
+  const btn = document.getElementById('btnSavedSelect');
+  if (savedSelectMode) {
+    bar.style.display = 'flex';
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--primary)';
+  } else {
+    cancelSavedSelect();
+  }
+  renderSavedList();
+}
+
+function toggleSavedItem(id) {
+  if (savedSelectedItems.has(id)) {
+    savedSelectedItems.delete(id);
+  } else {
+    savedSelectedItems.add(id);
+  }
+  const count = savedSelectedItems.size;
+  const el = document.getElementById('savedSelectionCount');
+  if (el) el.textContent = currentLang === 'ar' ? `${count} محدد` : `${count} selected`;
+  renderSavedList();
+}
+
+function cancelSavedSelect() {
+  savedSelectMode = false;
+  savedSelectedItems.clear();
+  document.getElementById('savedSelectionBar').style.display = 'none';
+  const btn = document.getElementById('btnSavedSelect');
+  btn.style.background = 'var(--bg3)';
+  btn.style.color = 'var(--text2)';
+  btn.style.borderColor = 'var(--border)';
+  renderSavedList();
+}
+
+function deleteSelectedSaved() {
+  if (savedSelectedItems.size === 0) return;
+  const msg = currentLang === 'ar' 
+    ? `حذف ${savedSelectedItems.size} عنصر؟` 
+    : `Delete ${savedSelectedItems.size} items?`;
+  if (!confirm(msg)) return;
+  items = items.filter(i => !savedSelectedItems.has(i.id));
+  saveItems();
+  cancelSavedSelect();
+  renderSavedList();
+  renderItems();
+  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+}
+
+function moveSelectedSaved() {
+  if (savedSelectedItems.size === 0) return;
+  if (folders.length === 0) {
+    showToast(currentLang === 'ar' ? '❌ لا توجد مجلدات' : '❌ No folders', 'var(--error)');
+    return;
+  }
+  const folderList = folders.map((f, i) => `${i+1}. ${f.icon} ${f.name}`).join('\n');
+  const input = prompt((currentLang === 'ar' ? 'اختر رقم المجلد:\n' : 'Choose folder number:\n') + folderList);
+  if (!input) return;
+  const idx = parseInt(input) - 1;
+  if (idx < 0 || idx >= folders.length) {
+    showToast(currentLang === 'ar' ? '❌ رقم غير صحيح' : '❌ Invalid number', 'var(--error)');
+    return;
+  }
+  const folder = folders[idx];
+  items.forEach(i => {
+    if (savedSelectedItems.has(i.id)) i.folderId = folder.id;
+  });
+  saveItems();
+  cancelSavedSelect();
+  renderSavedList();
+  showToast(currentLang === 'ar' ? `📂 تم النقل إلى ${folder.name}` : `📂 Moved to ${folder.name}`);
 }
 
 function renderFolders() {
@@ -1845,19 +1983,91 @@ function openFolder(folderId) {
   `).join('');
 }
 
+const FOLDER_ICONS = [
+  '📁','🎯','💡','🔥','❤️','🌟','📚','🎬','🎵','🏆',
+  '✈️','🍜','💻','🏠','📸','🎮','💼','🌍','📰','🎨',
+  '🛒','🏋️','🎤','🔬','📊','🐱','🌺','⚽','🎭','💰'
+];
+
+const FOLDER_COLORS = [
+  '#6366f1','#06b6d4','#f59e0b','#10b981',
+  '#ef4444','#8b5cf6','#ec4899','#f97316',
+  '#14b8a6','#84cc16'
+];
+
+let selectedFolderIcon = '📁';
+let selectedFolderColor = '#6366f1';
+
 function createFolder() {
-  const promptText = currentLang === 'ar' ? 'اسم المجلد الجديد:' : 'New folder name:';
-  const name = prompt(promptText);
-  if (!name) return;
-  const icons = ['📁','🎯','💡','🔥','❤️','🌟','📚','🎬','🎵','🏆'];
-  const colors = ['#6366f1','#06b6d4','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899'];
+  selectedFolderIcon = '📁';
+  selectedFolderColor = '#6366f1';
+  document.getElementById('folderNameInput').value = '';
+  buildFolderIconPicker();
+  buildFolderColorPicker();
+  
+  const overlay = document.getElementById('folderOverlay');
+  const sheet = document.getElementById('folderSheet');
+  overlay.style.display = 'block';
+  overlay.classList.add('show');
+  sheet.style.display = 'block';
+  setTimeout(() => sheet.classList.add('show'), 10);
+}
+
+function buildFolderIconPicker() {
+  const picker = document.getElementById('folderIconPicker');
+  picker.innerHTML = FOLDER_ICONS.map(icon => `
+    <div class="icon-option ${icon === selectedFolderIcon ? 'selected' : ''}"
+         onclick="selectFolderIcon('${icon}')">${icon}</div>
+  `).join('');
+}
+
+function buildFolderColorPicker() {
+  const picker = document.getElementById('folderColorPicker');
+  picker.innerHTML = FOLDER_COLORS.map(color => `
+    <div onclick="selectFolderColor('${color}')"
+         style="width:32px;height:32px;border-radius:50%;background:${color};cursor:pointer;
+                border:3px solid ${color === selectedFolderColor ? '#fff' : 'transparent'};
+                box-shadow:${color === selectedFolderColor ? '0 0 0 2px '+color : 'none'};
+                transition:all 0.2s"></div>
+  `).join('');
+}
+
+function selectFolderIcon(icon) {
+  selectedFolderIcon = icon;
+  buildFolderIconPicker();
+}
+
+function selectFolderColor(color) {
+  selectedFolderColor = color;
+  buildFolderColorPicker();
+}
+
+function closeFolderSheet() {
+  const sheet = document.getElementById('folderSheet');
+  const overlay = document.getElementById('folderOverlay');
+  sheet.classList.remove('show');
+  overlay.classList.remove('show');
+  setTimeout(() => {
+    sheet.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 350);
+}
+
+function saveFolderSheet() {
+  const name = document.getElementById('folderNameInput').value.trim();
+  if (!name) {
+    showToast(currentLang === 'ar' ? '⚠️ أدخل اسم المجلد' : '⚠️ Enter folder name', 'var(--error)');
+    return;
+  }
   folders.push({
-    id: Date.now(), name,
-    icon: icons[Math.floor(Math.random()*icons.length)],
-    color: colors[Math.floor(Math.random()*colors.length)],
+    id: Date.now(),
+    name,
+    icon: selectedFolderIcon,
+    color: selectedFolderColor,
     count: 0
   });
   saveFolders();
+  closeFolderSheet();
   renderFolders();
   showToast(currentLang === 'ar' ? '📁 تم إنشاء المجلد' : '📁 Folder created');
 }
@@ -2004,6 +2214,14 @@ function applyTranslations(lang) {
   const recentTitle = document.getElementById('recentTitle');
   if (recentTitle) recentTitle.textContent = lang === 'ar' ? 'الأحدث' : 'Recent';
 
+  // زر التحديد في المحفوظات
+  const btnSavedSelectText = document.getElementById('btnSavedSelectText');
+  if (btnSavedSelectText) btnSavedSelectText.textContent = lang === 'ar' ? 'تحديد' : 'Select';
+  const btnDeleteSaved = document.getElementById('btnDeleteSaved');
+  if (btnDeleteSaved) btnDeleteSaved.textContent = lang === 'ar' ? '🗑 حذف' : '🗑 Delete';
+  const btnMoveSaved = document.getElementById('btnMoveSaved');
+  if (btnMoveSaved) btnMoveSaved.textContent = lang === 'ar' ? '📂 نقل' : '📂 Move';
+
   // اسم المستخدم
   const profileName = document.getElementById('profileName');
   if (profileName) profileName.textContent = lang === 'ar' ? 'قاسم المستخدم' : 'User';
@@ -2016,6 +2234,20 @@ function applyTranslations(lang) {
   const btnNewFolder = document.getElementById('btnNewFolder');
   if (btnNewFolder) btnNewFolder.textContent = lang === 'ar' ? '+ جديد' : '+ New';
 
+  // نافذة المجلد الجديد
+  const folderSheetTitle = document.getElementById('folderSheetTitle');
+  if (folderSheetTitle) folderSheetTitle.textContent = lang === 'ar' ? '📁 مجلد جديد' : '📁 New Folder';
+  const folderNameInput = document.getElementById('folderNameInput');
+  if (folderNameInput) folderNameInput.placeholder = lang === 'ar' ? 'اسم المجلد...' : 'Folder name...';
+  const folderIconLabel = document.getElementById('folderIconLabel');
+  if (folderIconLabel) folderIconLabel.textContent = lang === 'ar' ? 'اختر أيقونة:' : 'Choose icon:';
+  const folderColorLabel = document.getElementById('folderColorLabel');
+  if (folderColorLabel) folderColorLabel.textContent = lang === 'ar' ? 'اختر لوناً:' : 'Choose color:';
+  const btnFolderCancel = document.getElementById('btnFolderCancel');
+  if (btnFolderCancel) btnFolderCancel.textContent = lang === 'ar' ? 'إلغاء' : 'Cancel';
+  const btnFolderSave = document.getElementById('btnFolderSave');
+  if (btnFolderSave) btnFolderSave.textContent = lang === 'ar' ? '✓ إنشاء' : '✓ Create';
+
   // شاشة المذكرات
   const notesTitle = document.getElementById('notesTitle');
   if (notesTitle) notesTitle.textContent = lang === 'ar' ? '📝 مذكراتي' : '📝 My Notes';
@@ -2025,6 +2257,8 @@ function applyTranslations(lang) {
   if (notesSearch) notesSearch.placeholder = lang === 'ar' ? 'ابحث في المذكرات...' : 'Search notes...';
   const navNotesLabel = document.getElementById('nav-notes-label');
   if (navNotesLabel) navNotesLabel.textContent = lang === 'ar' ? 'مذكرات' : 'Notes';
+  const navSettingsLabel = document.getElementById('nav-settings-label');
+  if (navSettingsLabel) navSettingsLabel.textContent = lang === 'ar' ? 'الإعدادات' : 'Settings';
   const btnSaveNote = document.getElementById('btnSaveNote');
   if (btnSaveNote) btnSaveNote.textContent = lang === 'ar' ? 'حفظ' : 'Save';
   renderNotes();

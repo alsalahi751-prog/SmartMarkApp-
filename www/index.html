@@ -1042,4 +1042,1795 @@ body::before {
     </div>
 
     <!-- نافذة تعديل مذكرة -->
-    <div id="noteEd
+    <div id="noteEditor" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:700;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-direction:row-reverse">
+        <button onclick="closeNote()" style="background:var(--bg3);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;color:var(--text1);font-size:18px;cursor:pointer">✕</button>
+        <input id="noteTitleInput" placeholder="عنوان المذكرة..." 
+               style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-size:18px;font-weight:700;font-family:system-ui,Tahoma,Arial,sans-serif;text-align:right;margin:0 12px"/>
+
+      </div>
+      <div style="padding:8px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onmousedown="event.preventDefault();formatNote('bold')" title="غامق" 
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-weight:900;font-size:15px;cursor:pointer">B</button>
+          <button onmousedown="event.preventDefault();formatNote('italic')" title="مائل"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-style:italic;font-size:15px;cursor:pointer">I</button>
+          <button onmousedown="event.preventDefault();formatNote('underline')" title="تسطير"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);text-decoration:underline;font-size:15px;cursor:pointer">U</button>
+          <button onmousedown="event.preventDefault();changeFontSize(-2)" title="تصغير"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:14px;cursor:pointer">A-</button>
+          <button onmousedown="event.preventDefault();changeFontSize(2)" title="تكبير"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:17px;font-weight:700;cursor:pointer">A+</button>
+          <button onmousedown="event.preventDefault();undoNote()" title="تراجع"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:16px;cursor:pointer">↩</button>
+        </div>
+        <span id="noteAutoSave" style="font-size:11px;color:var(--text3)">يتم الحفظ تلقائياً ✓</span>
+      </div>
+      <div id="noteContent" contenteditable="true"
+           style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-size:15px;font-family:system-ui,Tahoma,Arial,sans-serif;padding:20px;line-height:1.8;text-align:right;direction:rtl;overflow-y:auto;min-height:200px"
+           oninput="autoSaveNote()"
+           data-placeholder="اكتب مذكرتك هنا..."></div>
+    </div>
+
+    <!-- ===== SETTINGS SCREEN ===== -->
+    <div class="screen" id="screen-settings">
+      <div class="settings-header">
+        <h2>⚙️ الإعدادات</h2>
+      </div>
+
+      <!-- Profile -->
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">قاسم المستخدم</div>
+          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d787e687f4d7e606c7f79606c7f66236c7d7d">[email&#160;protected]</a></div>
+          <div class="profile-badge">✨ Pro</div>
+        </div>
+      </div>
+
+      <!-- Language -->
+      <div class="settings-section-title" id="sct_lang">اللغة</div>
+      <div class="settings-card">
+        <div class="lang-option selected" id="lang-ar" onclick="switchLang('ar')">
+          <div class="lang-radio"></div>
+          <div style="font-size:15px;font-weight:700">العربية 🇸🇦</div>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.04);margin:0 18px"></div>
+        <div class="lang-option" id="lang-en" onclick="switchLang('en')">
+          <div class="lang-radio"></div>
+          <div style="font-size:15px;font-weight:700">English 🇺🇸</div>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-section-title" id="sct_appearance">المظهر</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#1a1a2e">🌙</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_dark">الوضع الداكن</div>
+            <div class="setting-desc" id="sd_dark">تشغيل مفعّل حالياً</div>
+          </div>
+          <button class="toggle on" id="darkModeToggle" onclick="toggleDarkMode(this)"></button>
+        </div>
+        <div class="setting-row" style="border-bottom:none">
+          <div class="setting-icon" style="background:#1a2a1a">🎨</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_color">اللون الأساسي</div>
+            <div class="setting-desc" id="sd_color">بنفسجي — Indigo</div>
+          </div>
+          <div style="width:28px;height:28px;background:var(--primary);border-radius:8px;cursor:pointer"></div>
+        </div>
+      </div>
+
+      <!-- Sync -->
+      <div class="settings-section-title" id="sct_sync">المزامنة والتخزين</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#0a1a2a">🔄</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_sync">مزامنة تلقائية</div>
+            <div class="setting-desc" id="sd_sync">يتزامن كل 30 دقيقة</div>
+          </div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#0a1a2a">📶</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_wifi">Wi-Fi فقط</div>
+            <div class="setting-desc" id="sd_wifi">لا يستهلك بيانات الجوال</div>
+          </div>
+          <button class="toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row" style="border-bottom:none">
+          <div class="setting-icon" style="background:#1a1a0a">💾</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_clear">مسح ذاكرة التخزين</div>
+            <div class="setting-desc" id="sd_clear">24 ميغابايت مستخدمة</div>
+          </div>
+          <button onclick="clearStorage()" style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer" id="btn_clear_action">مسح</button>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="settings-section-title" id="sct_security">الأمان</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#1a0a2a">🔐</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_lock">قفل التطبيق</div>
+            <div class="setting-desc" id="sd_lock">حماية بـ PIN</div>
+          </div>
+          <button class="toggle" id="lockToggle" onclick="toggleLock(this)"></button>
+        </div>
+        <div class="setting-row" id="changePinRow" style="display:none;border-bottom:none">
+          <div class="setting-icon" style="background:#0a1a2a">🔑</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_changepin">تغيير رمز PIN</div>
+          </div>
+          <div style="color:var(--primary);cursor:pointer;font-weight:700;font-size:13px" onclick="setupPin(true)" id="btn_changepin">تغيير</div>
+        </div>
+      </div>
+
+      <div class="settings-section-title" id="sct_about">حول التطبيق</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#1a0a2a">📱</div>
+          <div class="setting-info">
+            <div class="setting-label">الإصدار</div>
+            <div class="setting-desc">SmartMark Pro 1.0.0</div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#0a2a1a">🔒</div>
+          <div class="setting-info">
+            <div class="setting-label">سياسة الخصوصية</div>
+          </div>
+          <div style="color:var(--text3)">›</div>
+        </div>
+        <div class="setting-row" style="border-bottom:none">
+          <div class="setting-icon" style="background:#2a1a0a">⭐</div>
+          <div class="setting-info">
+            <div class="setting-label" id="rateApp">قيّم التطبيق</div>
+          </div>
+          <div style="color:var(--text3)">›</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="switchScreen('home')">
+      <div class="nav-icon">🏠</div>
+      <span>الرئيسية</span>
+    </button>
+    <button class="nav-item" id="nav-saved" onclick="switchScreen('saved')">
+      <div class="nav-icon">🔖</div>
+      <span>المحفوظات</span>
+    </button>
+    <button class="nav-item" id="nav-folders" onclick="switchScreen('folders')">
+      <div class="nav-icon">📁</div>
+      <span>المجلدات</span>
+    </button>
+    <button class="nav-item" id="nav-notes" onclick="switchScreen('notes')">
+      <div class="nav-icon">📝</div>
+      <span id="nav-notes-label">مذكرات</span>
+    </button>
+    <button class="nav-item" id="nav-settings" onclick="switchScreen('settings')">
+      <div class="nav-icon">⚙️</div>
+      <span id="nav-settings-label">الإعدادات</span>
+    </button>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" onclick="showShareSheet()" title="حفظ محتوى جديد">＋</button>
+</div>
+
+<!-- ==========================================
+     SHARE BOTTOM SHEET
+=========================================== -->
+<div class="overlay" id="overlay" onclick="hideShareSheet()"></div>
+<div class="bottom-sheet" id="shareSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">حفظ محتوى جديد</div>
+  <input class="sheet-input" type="url" id="sheetUrlInput" placeholder="الصق الرابط هنا..." 
+         oninput="detectPlatformFromInput(this.value)" dir="ltr" />
+  <div class="url-preview" id="urlPreview" style="display:none">
+    <div class="url-source" id="sheetPlatform">🌐 رابط</div>
+    <div class="url-text" id="sheetUrl"></div>
+  </div>
+  <input class="sheet-input" type="text" id="sheetTitle" placeholder="عنوان (اختياري)" />
+  <input class="sheet-input" type="text" id="sheetNotes" placeholder="ملاحظات…" />
+  
+  <!-- اختيار الأيقونة -->
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:700" id="iconPickerLabel">اختر أيقونة:</div>
+    <div id="iconPicker" style="display:flex;flex-wrap:wrap;gap:8px;background:var(--bg3);padding:12px;border-radius:12px;border:1px solid var(--border)">
+    </div>
+  </div>
+  <div class="sheet-btns">
+    <button class="btn-cancel" onclick="hideShareSheet()">إلغاء</button>
+    <button class="btn-save" onclick="saveFromSheet()">✓ حفظ الآن</button>
+  </div>
+</div>
+
+<!-- ==========================================
+     DETAIL VIEW
+=========================================== -->
+<div class="detail-view" id="detailView">
+  <div class="detail-topbar">
+    <button onclick="closeDetail()">✕</button>
+    <div style="font-size:16px;font-weight:800" id="detailTopTitle">تفاصيل العنصر</div>
+    <button onclick="shareDetail()">⎋</button>
+  </div>
+  <div class="detail-thumb" id="detailThumb">🖼</div>
+  <div class="detail-content">
+    <div class="detail-platform"><span id="detailPlatform">📸 Instagram</span></div>
+    <div class="detail-title" id="detailTitle">عنوان المحتوى المحفوظ</div>
+    <div class="detail-url" id="detailUrl" onclick="openUrl()" style="cursor:pointer;text-decoration:underline;" title="اضغط لفتح الرابط">https://instagram.com/p/example</div>
+    <div class="detail-divider"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em" id="detailNotesLabel">الملاحظات</div>
+    <div class="detail-notes" id="detailNotes">—</div>
+  </div>
+  <div class="detail-actions" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
+    <button class="detail-btn" onclick="toggleFavDetail()">
+      <span id="favDetailIcon">⭐</span>
+      <div id="favDetailText">مفضلة</div>
+    </button>
+    <button class="detail-btn" onclick="openUrl()">
+      <span>🔗</span>
+      <div id="btnOpenUrl">فتح</div>
+    </button>
+    <button class="detail-btn" onclick="copyUrl()">
+      <span>📋</span>
+      <div id="btnCopyUrl">نسخ</div>
+    </button>
+    <button class="detail-btn" onclick="editDetail()">
+      <span>✏️</span>
+      <div id="btnEdit">تعديل</div>
+    </button>
+    <button class="detail-btn" style="color:var(--error);border-color:var(--error)" onclick="deleteDetail()">
+      <span>🗑</span>
+      <div id="btnDelete">حذف</div>
+    </button>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// DATA
+// ==========================================
+
+// دوال localStorage
+function saveItems() {
+  try { localStorage.setItem('sm_items', JSON.stringify(items)); } catch(e) {}
+}
+function loadItems() {
+  try {
+    const d = localStorage.getItem('sm_items');
+    if (d) return JSON.parse(d);
+  } catch(e) {}
+  return null;
+}
+let currentDetailIndex = null;
+let activeFilter = 'all';
+let isGridView = true;
+let obSlide = 0;
+
+const PLATFORMS = {
+  facebook: { icon: '🔵', color: '#1877f2', class: 'bg-fb' },
+  instagram: { icon: '📸', color: '#e1306c', class: 'bg-ig' },
+  twitter:   { icon: '🐦', color: '#1da1f2', class: 'bg-tw' },
+  tiktok:    { icon: '🎵', color: '#fe2c55', class: 'bg-tt' },
+  youtube:   { icon: '▶️', color: '#ff0000', class: 'bg-yt' },
+  linkedin:  { icon: '💼', color: '#0a66c2', class: 'bg-ln' },
+  pinterest: { icon: '📌', color: '#e60023', class: 'bg-pin' },
+  other:     { icon: '🌐', color: '#6366f1', class: 'bg-gen' },
+};
+
+let items = [
+  { id:1, title:'رحلة مذهلة في جبال الألب السويسرية', platform:'instagram', type:'image', emoji:'🏔', url:'instagram.com/p/swiss_alps_trip', notes:'منظر خلاب جداً، يستحق الزيارة', fav:true, date:'٢٠٢٤/١/١٥', folder:'سفر' },
+  { id:2, title:'أفضل وصفات الرامن اليابانية الأصيلة', platform:'youtube', type:'video', emoji:'🍜', url:'youtu.be/ramen_recipe_japan', notes:'وصفة ممتازة للطبخ', fav:false, date:'٢٠٢٤/١/١٤', folder:'طعام' },
+  { id:3, title:'مقابلة حصرية مع إيلون ماسك حول الذكاء الاصطناعي', platform:'twitter', type:'link', emoji:'🤖', url:'twitter.com/elonmusk/status/123', notes:'', fav:true, date:'٢٠٢٤/١/١٣', folder:'تقنية' },
+  { id:4, title:'رقصة فيروسية جديدة اجتاحت العالم', platform:'tiktok', type:'video', emoji:'💃', url:'tiktok.com/@viral_dance_2024', notes:'رقصة ممتعة جداً', fav:false, date:'٢٠٢٤/١/١٢', folder:null },
+  { id:5, title:'أجمل غروب شمس على ساحل المحيط الهادئ', platform:'instagram', type:'image', emoji:'🌅', url:'instagram.com/p/pacific_sunset', notes:'', fav:true, date:'٢٠٢٤/١/١١', folder:'سفر' },
+  { id:6, title:'كيف تصنع لغة برمجة جديدة من الصفر', platform:'youtube', type:'video', emoji:'💻', url:'youtu.be/build_programming_lang', notes:'مصدر تعليمي رائع للمطورين', fav:false, date:'٢٠٢٤/١/١٠', folder:'تقنية' },
+  { id:7, title:'أحدث ألبوم موسيقي - بيلي إيليش', platform:'instagram', type:'link', emoji:'🎵', url:'instagram.com/billieeilish/post', notes:'', fav:false, date:'٢٠٢٤/١/٩', folder:null },
+  { id:8, title:'وثائقي: سر بناء الأهرامات المصرية', platform:'youtube', type:'video', emoji:'🏺', url:'youtu.be/pyramid_secret', notes:'وثائقي مذهل ومفيد', fav:true, date:'٢٠٢٤/١/٨', folder:null },
+  { id:9, title:'أبرز لحظات كأس العالم 2026', platform:'twitter', type:'link', emoji:'⚽', url:'twitter.com/FIFAWorldCup/highlights', notes:'', fav:false, date:'٢٠٢٤/١/٧', folder:null },
+  { id:10, title:'تصميم داخلي حديث لغرفة معيشة صغيرة', platform:'pinterest', type:'image', emoji:'🛋', url:'pinterest.com/pin/living_room_design', notes:'أفكار ممتازة لشقتي', fav:true, date:'٢٠٢٤/١/٦', folder:null },
+  { id:11, title:'روتين صباحي للنجاح مع جيف بيزوس', platform:'linkedin', type:'link', emoji:'☀️', url:'linkedin.com/posts/jeff-bezos-morning', notes:'', fav:false, date:'٢٠٢٤/١/٥', folder:'تطوير ذات' },
+  { id:12, title:'أطرف القطط على الإنترنت 2024 تجميع', platform:'tiktok', type:'video', emoji:'🐱', url:'tiktok.com/@cats_compilation', notes:'لقطات مضحكة جداً 😂', fav:true, date:'٢٠٢٤/١/٤', folder:null },
+];
+
+let folders = [
+  { id:1, name:'سفر', icon:'✈️', color:'#06b6d4', count:2 },
+  { id:2, name:'تقنية', icon:'💻', color:'#6366f1', count:2 },
+  { id:3, name:'طعام', icon:'🍜', color:'#f59e0b', count:1 },
+  { id:4, name:'تطوير ذات', icon:'📚', color:'#10b981', count:1 },
+];
+
+// ==========================================
+// SPLASH → ONBOARDING → APP
+// ==========================================
+function clearStorage() {
+  const msg = currentLang === 'ar' 
+    ? 'سيتم مسح ذاكرة التخزين المؤقت فقط\nلن تُحذف بياناتك\nهل تريد المتابعة؟'
+    : 'Clear temporary cache only\nYour data will not be deleted\nContinue?';
+  if (!confirm(msg)) return;
+  
+  const keysToKeep = ['sm_items','sm_folders','sm_notes','sm_lang','sm_theme','sm_pin','sm_ob_done'];
+  Object.keys(localStorage).forEach(key => {
+    if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+  });
+  
+  showToast(currentLang === 'ar' ? '✓ تم مسح ذاكرة التخزين' : '✓ Cache cleared', 'var(--success)');
+}
+
+window.onload = () => {
+  updateClock();
+  setInterval(updateClock, 60000);
+  document.getElementById('splash').style.display = 'none';
+  localStorage.setItem('sm_ob_done', '1');
+  showApp();
+  checkLock();
+};
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+
+function showApp() {
+  // تطبيق الثيم المحفوظ
+  const savedTheme = localStorage.getItem('sm_theme');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+    const toggle = document.getElementById('darkModeToggle');
+    if (toggle) toggle.classList.remove('on');
+  }
+  
+  // تحميل البيانات المحفوظة
+  const saved = loadItems();
+  if (saved && saved.length > 0) items = saved;
+  
+  document.getElementById('app').classList.add('visible');
+  renderItems();
+  renderSavedList();
+  renderFolders();
+  
+  // تحميل المجلدات
+  loadFolders();
+
+  // تحميل المذكرات
+  loadNotes();
+  renderNotes();
+
+  // تحقق من القفل
+  const savedPin = localStorage.getItem('sm_pin');
+  if (savedPin) {
+    document.getElementById('lockToggle').classList.add('on');
+    document.getElementById('changePinRow').style.display = 'flex';
+    document.getElementById('sd_lock').textContent = currentLang === 'ar' ? 'القفل مفعّل ✓' : 'Lock enabled ✓';
+  }
+
+  // تطبيق اللغة المحفوظة
+  const savedLang = localStorage.getItem('sm_lang') || 'ar';
+  currentLang = savedLang;
+  document.querySelectorAll('.lang-option').forEach(el => el.classList.remove('selected'));
+  const langEl = document.getElementById('lang-' + savedLang);
+  if (langEl) langEl.classList.add('selected');
+  applyTranslations(savedLang);
+}
+
+// ==========================================
+// ONBOARDING
+// ==========================================
+function nextOb() {
+  if (obSlide < 2) {
+    goOb(obSlide + 1);
+  } else {
+    finishOnboarding();
+  }
+}
+
+function goOb(n) {
+  document.getElementById('ob' + obSlide).classList.remove('active');
+  document.getElementById('ob' + obSlide).classList.add('prev');
+  setTimeout(() => document.getElementById('ob' + obSlide).classList.remove('prev'), 400);
+  obSlide = n;
+  document.getElementById('ob' + obSlide).classList.add('active');
+  document.querySelectorAll('.ob-dot').forEach((d,i) => d.classList.toggle('active', i===n));
+  document.getElementById('obNextBtn').textContent = n === 2 ? 'ابدأ الآن 🚀' : 'التالي ←';
+}
+
+function finishOnboarding() {
+  localStorage.setItem('sm_ob_done','1');
+  document.getElementById('onboarding').style.display = 'none';
+  showApp();
+}
+
+// ==========================================
+// SCREENS
+// ==========================================
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+}
+
+// ==========================================
+// ITEMS RENDERING
+// ==========================================
+function getFilteredItems() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  return items.filter(item => {
+    const matchFilter = activeFilter === 'all' ||
+      (activeFilter === 'favorite' && item.fav) ||
+      (activeFilter === 'video' && item.type === 'video') ||
+      (activeFilter === 'image' && item.type === 'image') ||
+      (activeFilter === 'link' && item.type === 'link');
+    const matchSearch = !q || item.title.includes(q) || item.notes.includes(q);
+    return matchFilter && matchSearch;
+  });
+}
+
+function renderItems() {
+  const container = document.getElementById('items-container');
+  const filtered = getFilteredItems();
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:span 2">
+        <div class="emoji">🔍</div>
+        <h3>لا توجد نتائج</h3>
+        <p>جرب البحث بكلمات مختلفة أو غيّر الفلتر</p>
+      </div>`;
+    return;
+  }
+
+  const p = PLATFORMS;
+  container.innerHTML = filtered.map((item, idx) => `
+    <div class="item-card" 
+         onclick="${selectMode ? `toggleItemSelect(${item.id}, event)` : `openDetail(${item.id})`}"
+         style="${selectedItems.has(item.id) ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
+      ${selectMode ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${selectedItems.has(item.id) ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;z-index:10">${selectedItems.has(item.id) ? '✓' : ''}</div>` : ''}
+      <div class="item-thumb ${p[item.platform].class}">
+        <span style="font-size:40px">${item.emoji}</span>
+        <div class="platform-badge" style="background:${p[item.platform].color}">${p[item.platform].icon}</div>
+        <div class="type-badge">${item.type === 'video' ? '🎬' : item.type === 'image' ? '🖼' : '🔗'}</div>
+      </div>
+      <div class="item-body">
+        <div class="item-title">${item.title}</div>
+        <div class="item-meta">
+          <div class="item-date">${item.date}</div>
+          <div class="item-actions">
+            <div class="action-mini ${item.fav ? 'fav-active' : ''}" 
+                 onclick="event.stopPropagation();toggleFav(${item.id},this)"
+                 title="مفضلة">⭐</div>
+            <div class="action-mini" onclick="event.stopPropagation();deleteItem(${item.id})" 
+                 style="color:var(--error)" title="حذف">✕</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Update stats
+  const favCount = items.filter(i => i.fav).length;
+  document.getElementById('s1').textContent = items.length;
+  document.getElementById('s2').textContent = favCount;
+  document.getElementById('s3').textContent = folders.length;
+  const t = TRANSLATIONS[currentLang];
+  document.getElementById('total-count').textContent = `${items.length} ${t.totalSaved}`;
+}
+
+let savedSelectMode = false;
+let savedSelectedItems = new Set();
+
+function renderSavedList() {
+  const container = document.getElementById('saved-list');
+  const p = PLATFORMS;
+  container.innerHTML = items.map(item => `
+    <div class="list-item" 
+         onclick="${savedSelectMode ? `toggleSavedItem(${item.id})` : `openDetail(${item.id})`}"
+         style="${savedSelectedItems.has(item.id) ? 'background:var(--primary-glow);border-right:3px solid var(--primary)' : ''}">
+      ${savedSelectMode ? `
+        <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
+                    background:${savedSelectedItems.has(item.id) ? 'var(--primary)' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0">
+          ${savedSelectedItems.has(item.id) ? '✓' : ''}
+        </div>` : ''}
+      <div class="list-thumb ${p[item.platform].class}">
+        <span>${item.emoji}</span>
+      </div>
+      <div class="list-info">
+        <div class="list-title">${item.title}</div>
+        <div class="list-sub">${p[item.platform].icon} ${item.platform} · ${item.date}</div>
+      </div>
+      <div class="list-badge" style="background:${
+        item.type==='video'?'#7c3aed':item.type==='image'?'#0891b2':'#065f46'
+      }">${item.type==='video'?'🎬':item.type==='image'?'🖼':'🔗'}</div>
+    </div>
+  `).join('');
+}
+
+function toggleSavedSelect() {
+  savedSelectMode = !savedSelectMode;
+  savedSelectedItems.clear();
+  const bar = document.getElementById('savedSelectionBar');
+  const btn = document.getElementById('btnSavedSelect');
+  if (savedSelectMode) {
+    bar.style.display = 'flex';
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--primary)';
+  } else {
+    cancelSavedSelect();
+  }
+  renderSavedList();
+}
+
+function toggleSavedItem(id) {
+  if (savedSelectedItems.has(id)) {
+    savedSelectedItems.delete(id);
+  } else {
+    savedSelectedItems.add(id);
+  }
+  const count = savedSelectedItems.size;
+  const el = document.getElementById('savedSelectionCount');
+  if (el) el.textContent = currentLang === 'ar' ? `${count} محدد` : `${count} selected`;
+  renderSavedList();
+}
+
+function cancelSavedSelect() {
+  savedSelectMode = false;
+  savedSelectedItems.clear();
+  document.getElementById('savedSelectionBar').style.display = 'none';
+  const btn = document.getElementById('btnSavedSelect');
+  btn.style.background = 'var(--bg3)';
+  btn.style.color = 'var(--text2)';
+  btn.style.borderColor = 'var(--border)';
+  renderSavedList();
+}
+
+function deleteSelectedSaved() {
+  if (savedSelectedItems.size === 0) return;
+  const msg = currentLang === 'ar' 
+    ? `حذف ${savedSelectedItems.size} عنصر؟` 
+    : `Delete ${savedSelectedItems.size} items?`;
+  if (!confirm(msg)) return;
+  items = items.filter(i => !savedSelectedItems.has(i.id));
+  saveItems();
+  cancelSavedSelect();
+  renderSavedList();
+  renderItems();
+  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+}
+
+function moveSelectedSaved() {
+  if (savedSelectedItems.size === 0) return;
+  if (folders.length === 0) {
+    showToast(currentLang === 'ar' ? '❌ لا توجد مجلدات' : '❌ No folders', 'var(--error)');
+    return;
+  }
+  const folderList = folders.map((f, i) => `${i+1}. ${f.icon} ${f.name}`).join('\n');
+  const input = prompt((currentLang === 'ar' ? 'اختر رقم المجلد:\n' : 'Choose folder number:\n') + folderList);
+  if (!input) return;
+  const idx = parseInt(input) - 1;
+  if (idx < 0 || idx >= folders.length) {
+    showToast(currentLang === 'ar' ? '❌ رقم غير صحيح' : '❌ Invalid number', 'var(--error)');
+    return;
+  }
+  const folder = folders[idx];
+  items.forEach(i => {
+    if (savedSelectedItems.has(i.id)) i.folderId = folder.id;
+  });
+  saveItems();
+  cancelSavedSelect();
+  renderSavedList();
+  showToast(currentLang === 'ar' ? `📂 تم النقل إلى ${folder.name}` : `📂 Moved to ${folder.name}`);
+}
+
+function renderFolders() {
+  const grid = document.getElementById('folders-grid');
+  const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
+  grid.innerHTML = folders.map(f => `
+    <div class="folder-card" style="--folder-color:${f.color}" onclick="openFolder(${f.id})">
+      <div class="folder-icon">${f.icon}</div>
+      <div class="folder-name">${f.name}</div>
+      <div class="folder-count">${items.filter(i=>i.folderId===f.id).length} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
+      <div class="folder-bar" style="background:${f.color};width:${Math.min(100,items.filter(i=>i.folderId===f.id).length*20)}%"></div>
+    </div>
+  `).join('') + `
+    <div class="new-folder-card" onclick="createFolder()">
+      <span>➕</span>
+      <p>${newFolderText}</p>
+    </div>`;
+}
+
+// ==========================================
+// ACTIONS
+// ==========================================
+function setFilter(type, el) {
+  activeFilter = type;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderItems();
+}
+
+function filterItems() {
+  renderItems();
+}
+
+function toggleFav(id, el) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.fav = !item.fav;
+  saveItems();
+  el.classList.toggle('fav-active', item.fav);
+  renderItems();
+  renderSavedList();
+  showToast(item.fav ? '⭐ أُضيف إلى المفضلة' : 'إزالة من المفضلة', item.fav ? 'var(--accent)' : 'var(--text2)');
+}
+
+function deleteItem(id) {
+  if (!confirm('هل تريد حذف هذا العنصر؟')) return;
+  items = items.filter(i => i.id !== id);
+  saveItems();
+  renderItems();
+  renderSavedList();
+  showToast('🗑 تم الحذف');
+}
+
+function toggleView() {
+  isGridView = !isGridView;
+  const c = document.getElementById('items-container');
+  const btn = document.getElementById('viewToggleBtn');
+  if (isGridView) {
+    c.className = 'items-grid';
+    btn.textContent = '⊞';
+  } else {
+    c.className = '';
+    c.style.padding = '0';
+    renderSavedListInHome();
+    btn.textContent = '☰';
+    return;
+  }
+  renderItems();
+}
+
+function renderSavedListInHome() {
+  const container = document.getElementById('items-container');
+  const p = PLATFORMS;
+  container.innerHTML = items.map(item => `
+    <div class="list-item" onclick="openDetail(${item.id})">
+      <div class="list-thumb ${p[item.platform].class}"><span>${item.emoji}</span></div>
+      <div class="list-info">
+        <div class="list-title">${item.title}</div>
+        <div class="list-sub">${p[item.platform].icon} ${item.platform} · ${item.date}</div>
+      </div>
+      <div class="action-mini ${item.fav?'fav-active':''}" 
+           onclick="event.stopPropagation();toggleFav(${item.id},this)">⭐</div>
+    </div>`).join('');
+}
+
+// ==========================================
+// SHARE SHEET
+// ==========================================
+const ICON_OPTIONS = [
+  '🔗','📸','🎬','🎵','📌','⭐','🔥','💡','🎯','📚',
+  '🎮','🍜','✈️','💻','🏆','❤️','🌟','🎨','📰','🛒',
+  '💼','🏠','🎭','🌍','🎤','📊','🔬','🎸','🏋️','🐱'
+];
+
+let selectedIcon = '🔗';
+
+function buildIconPicker() {
+  const picker = document.getElementById('iconPicker');
+  if (!picker) return;
+  picker.innerHTML = ICON_OPTIONS.map(emoji => `
+    <div class="icon-option ${emoji === selectedIcon ? 'selected' : ''}" 
+         onclick="selectIcon('${emoji}')" title="${emoji}">
+      ${emoji}
+    </div>
+  `).join('');
+}
+
+function selectIcon(emoji) {
+  selectedIcon = emoji;
+  document.querySelectorAll('.icon-option').forEach(el => {
+    el.classList.toggle('selected', el.title === emoji);
+  });
+}
+
+const sampleUrls = [
+  { platform:'📸 Instagram', url:'instagram.com/p/photo_12345' },
+  { platform:'🎵 TikTok', url:'tiktok.com/@creator/video/67890' },
+  { platform:'🔵 Facebook', url:'facebook.com/watch?v=1234567' },
+  { platform:'▶️ YouTube', url:'youtu.be/dQw4w9WgXcQ' },
+  { platform:'🐦 Twitter/X', url:'x.com/user/status/987654321' },
+];
+
+function toggleDarkMode(btn) {
+  btn.classList.toggle('on');
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('sm_theme', isLight ? 'light' : 'dark');
+  // تحديث نص الوصف
+  const darkDesc = document.getElementById('sd_dark');
+  if (darkDesc) {
+    if (currentLang === 'ar') {
+      darkDesc.textContent = isLight ? 'الوضع الفاتح مفعّل' : 'تشغيل مفعّل حالياً';
+    } else {
+      darkDesc.textContent = isLight ? 'Light mode enabled' : 'Currently enabled';
+    }
+  }
+}
+
+function detectPlatformFromInput(url) {
+  if (!url) { document.getElementById('urlPreview').style.display='none'; return; }
+  let platform = 'other';
+  if (url.includes('instagram')) platform = 'instagram';
+  else if (url.includes('tiktok')) platform = 'tiktok';
+  else if (url.includes('facebook') || url.includes('fb.')) platform = 'facebook';
+  else if (url.includes('youtube') || url.includes('youtu.be')) platform = 'youtube';
+  else if (url.includes('twitter') || url.includes('x.com')) platform = 'twitter';
+  else if (url.includes('linkedin')) platform = 'linkedin';
+  else if (url.includes('pinterest')) platform = 'pinterest';
+  
+  const p = PLATFORMS[platform];
+  document.getElementById('sheetPlatform').textContent = p.icon + ' ' + platform;
+  document.getElementById('sheetUrl').textContent = url;
+  document.getElementById('urlPreview').style.display = 'block';
+}
+
+function showShareSheet() {
+  const sample = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+  document.getElementById('sheetPlatform').textContent = sample.platform;
+  document.getElementById('sheetUrl').textContent = sample.url;
+  document.getElementById('sheetUrlInput').value = '';
+  document.getElementById('sheetTitle').value = '';
+  document.getElementById('sheetNotes').value = '';
+  document.getElementById('urlPreview').style.display = 'none';
+  selectedIcon = '🔗';
+  buildIconPicker();
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => document.getElementById('shareSheet').classList.add('show'), 10);
+}
+
+function hideShareSheet() {
+  document.getElementById('shareSheet').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function saveFromSheet() {
+  const urlInput = document.getElementById('sheetUrlInput').value.trim();
+  if (!urlInput) { showToast('⚠️ الرجاء إدخال رابط', 'var(--error)'); return; }
+  const title = document.getElementById('sheetTitle').value.trim();
+  const notes = document.getElementById('sheetNotes').value.trim();
+  const url = urlInput;
+  const platform = document.getElementById('sheetPlatform').textContent || '🌐 other';
+
+  const emojis = [selectedIcon]; // استخدام الأيقونة المختارة
+  const types = ['link','image','video'];
+  const plKey = platform.includes('Instagram')?'instagram':platform.includes('TikTok')?'tiktok':
+    platform.includes('Facebook')?'facebook':platform.includes('YouTube')?'youtube':
+    platform.includes('Twitter')?'twitter':'other';
+
+  const newItem = {
+    id: Date.now(), fav: false,
+    title: title || (currentLang === 'ar' ? `محتوى جديد من ${plKey}` : `New content from ${plKey}`),
+    platform: plKey,
+    type: types[Math.floor(Math.random()*3)],
+    emoji: selectedIcon,
+    url, notes,
+    date: new Date().toLocaleDateString('ar-EG'),
+    folder: null
+  };
+
+  items.unshift(newItem);
+  saveItems();
+  hideShareSheet();
+  renderItems();
+  renderSavedList();
+  showToast('✓ تم الحفظ في SmartMark');
+}
+
+// ==========================================
+// DETAIL VIEW
+// ==========================================
+function openDetail(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  currentDetailIndex = id;
+  const p = PLATFORMS[item.platform];
+
+  document.getElementById('detailThumb').textContent = item.emoji;
+  document.getElementById('detailThumb').style.background =
+    `linear-gradient(135deg, ${p.color}22, ${p.color}44)`;
+  const detailTitles = {
+    ar: {video:'عرض الفيديو', image:'عرض الصورة', link:'عرض الرابط'},
+    en: {video:'View Video', image:'View Image', link:'View Link'}
+  };
+  const dt = detailTitles[currentLang] || detailTitles['ar'];
+  document.getElementById('detailTopTitle').textContent = item.type === 'video' ? dt.video :
+    item.type === 'image' ? dt.image : dt.link;
+  const platformName = item.platform === 'other' ? 
+    (currentLang === 'ar' ? 'رابط' : 'Link') : item.platform;
+  document.getElementById('detailPlatform').textContent = `${p.icon} ${platformName}`;
+  document.getElementById('detailTitle').textContent = item.title;
+  document.getElementById('detailUrl').textContent = 'https://' + item.url;
+  document.getElementById('detailNotes').textContent = item.notes || '—';
+  document.getElementById('favDetailIcon').textContent = item.fav ? '💛' : '⭐';
+  document.getElementById('favDetailText').textContent = item.fav ? 
+    (currentLang === 'ar' ? 'مفضّلة ✓' : 'Saved ✓') : 
+    (currentLang === 'ar' ? 'مفضلة' : 'Favorite');
+
+  document.getElementById('detailView').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailView').classList.remove('show');
+  currentDetailIndex = null;
+}
+
+function toggleFavDetail() {
+  if (!currentDetailIndex) return;
+  const item = items.find(i => i.id === currentDetailIndex);
+  if (!item) return;
+  item.fav = !item.fav;
+  document.getElementById('favDetailIcon').textContent = item.fav ? '💛' : '⭐';
+  document.getElementById('favDetailText').textContent = item.fav ? 
+    (currentLang === 'ar' ? 'مفضّلة ✓' : 'Saved ✓') : 
+    (currentLang === 'ar' ? 'مفضلة' : 'Favorite');
+  renderItems();
+  showToast(item.fav ? '⭐ أُضيف إلى المفضلة' : 'إزالة من المفضلة');
+}
+
+function copyUrl() {
+  if (!currentDetailIndex) return;
+  const item = items.find(i => i.id === currentDetailIndex);
+  if (!item) return;
+  let url = item.url;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast(currentLang === 'ar' ? '📋 تم نسخ الرابط' : '📋 Link copied!');
+    }).catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  showToast(currentLang === 'ar' ? '📋 تم نسخ الرابط' : '📋 Link copied!');
+}
+
+function openUrl() {
+  if (!currentDetailIndex) return;
+  const item = items.find(i => i.id === currentDetailIndex);
+  if (!item) return;
+  let url = item.url;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  window.open(url, '_blank');
+}
+
+function shareDetail() {
+  showToast('🔗 تم نسخ الرابط');
+}
+
+function deleteDetail() {
+  if (!confirm('هل تريد حذف هذا العنصر نهائياً؟')) return;
+  items = items.filter(i => i.id !== currentDetailIndex);
+  closeDetail();
+  renderItems();
+  renderSavedList();
+  showToast('🗑 تم الحذف');
+}
+
+// ==========================================
+// FOLDERS
+// ==========================================
+function saveFolders() {
+  try { localStorage.setItem('sm_folders', JSON.stringify(folders)); } catch(e) {}
+}
+
+function loadFolders() {
+  try {
+    const d = localStorage.getItem('sm_folders');
+    if (d) {
+      const saved = JSON.parse(d);
+      if (saved && saved.length > 0) folders = saved;
+    }
+  } catch(e) {}
+}
+
+function openFolder(folderId) {
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  // تصفية العناصر حسب المجلد
+  activeFilter = 'all';
+  switchScreen('home');
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.chip').classList.add('active');
+  // تغيير عنوان الصفحة مؤقتاً
+  document.querySelector('.header-brand h1').textContent = folder.icon + ' ' + folder.name;
+  // عرض عناصر المجلد فقط
+  const container = document.getElementById('items-container');
+  const folderItems = items.filter(i => i.folderId === folderId);
+  if (folderItems.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:span 2">
+      <div class="emoji">${folder.icon}</div>
+      <h3>${currentLang === 'ar' ? 'المجلد فارغ' : 'Empty folder'}</h3>
+      <p>${currentLang === 'ar' ? 'لا توجد عناصر في هذا المجلد' : 'No items in this folder'}</p>
+    </div>`;
+    return;
+  }
+  const p = PLATFORMS;
+  container.innerHTML = folderItems.map(item => `
+    <div class="item-card" onclick="openDetail(${item.id})">
+      <div class="item-thumb ${p[item.platform].class}">
+        <span style="font-size:40px">${item.emoji}</span>
+        <div class="platform-badge" style="background:${p[item.platform].color}">${p[item.platform].icon}</div>
+      </div>
+      <div class="item-body">
+        <div class="item-title">${item.title}</div>
+        <div class="item-meta">
+          <div class="item-date">${item.date}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+const FOLDER_ICONS = [
+  '📁','🎯','💡','🔥','❤️','🌟','📚','🎬','🎵','🏆',
+  '✈️','🍜','💻','🏠','📸','🎮','💼','🌍','📰','🎨',
+  '🛒','🏋️','🎤','🔬','📊','🐱','🌺','⚽','🎭','💰'
+];
+
+const FOLDER_COLORS = [
+  '#6366f1','#06b6d4','#f59e0b','#10b981',
+  '#ef4444','#8b5cf6','#ec4899','#f97316',
+  '#14b8a6','#84cc16'
+];
+
+let selectedFolderIcon = '📁';
+let selectedFolderColor = '#6366f1';
+
+function createFolder() {
+  selectedFolderIcon = '📁';
+  selectedFolderColor = '#6366f1';
+  document.getElementById('folderNameInput').value = '';
+  buildFolderIconPicker();
+  buildFolderColorPicker();
+  
+  const overlay = document.getElementById('folderOverlay');
+  const sheet = document.getElementById('folderSheet');
+  overlay.style.display = 'block';
+  overlay.classList.add('show');
+  sheet.style.display = 'block';
+  setTimeout(() => sheet.classList.add('show'), 10);
+}
+
+function buildFolderIconPicker() {
+  const picker = document.getElementById('folderIconPicker');
+  picker.innerHTML = FOLDER_ICONS.map(icon => `
+    <div class="icon-option ${icon === selectedFolderIcon ? 'selected' : ''}"
+         onclick="selectFolderIcon('${icon}')">${icon}</div>
+  `).join('');
+}
+
+function buildFolderColorPicker() {
+  const picker = document.getElementById('folderColorPicker');
+  picker.innerHTML = FOLDER_COLORS.map(color => `
+    <div onclick="selectFolderColor('${color}')"
+         style="width:32px;height:32px;border-radius:50%;background:${color};cursor:pointer;
+                border:3px solid ${color === selectedFolderColor ? '#fff' : 'transparent'};
+                box-shadow:${color === selectedFolderColor ? '0 0 0 2px '+color : 'none'};
+                transition:all 0.2s"></div>
+  `).join('');
+}
+
+function selectFolderIcon(icon) {
+  selectedFolderIcon = icon;
+  buildFolderIconPicker();
+}
+
+function selectFolderColor(color) {
+  selectedFolderColor = color;
+  buildFolderColorPicker();
+}
+
+function closeFolderSheet() {
+  const sheet = document.getElementById('folderSheet');
+  const overlay = document.getElementById('folderOverlay');
+  sheet.classList.remove('show');
+  overlay.classList.remove('show');
+  setTimeout(() => {
+    sheet.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 350);
+}
+
+function saveFolderSheet() {
+  const name = document.getElementById('folderNameInput').value.trim();
+  if (!name) {
+    showToast(currentLang === 'ar' ? '⚠️ أدخل اسم المجلد' : '⚠️ Enter folder name', 'var(--error)');
+    return;
+  }
+  folders.push({
+    id: Date.now(),
+    name,
+    icon: selectedFolderIcon,
+    color: selectedFolderColor,
+    count: 0
+  });
+  saveFolders();
+  closeFolderSheet();
+  renderFolders();
+  showToast(currentLang === 'ar' ? '📁 تم إنشاء المجلد' : '📁 Folder created');
+}
+
+// ==========================================
+// LANGUAGE SWITCH
+// ==========================================
+// قاموس الترجمة
+const TRANSLATIONS = {
+  ar: {
+    appName: 'SmartMark',
+    totalSaved: 'عنصر محفوظ',
+    search: 'ابحث في محفوظاتك...',
+    all: 'الكل',
+    favorites: '⭐ المفضلة',
+    videos: '🎬 فيديو',
+    images: '🖼 صور',
+    links: '🔗 روابط',
+    total: 'إجمالي',
+    fav: 'مفضلة',
+    folders: 'مجلدات',
+    saved: '📌 المحفوظات',
+    savedDesc: 'جميع العناصر المحفوظة مرتبة حسب التاريخ',
+    foldersTitle: '📁 المجلدات',
+    settings: '⚙️ الإعدادات',
+    newFolder: 'مجلد جديد',
+    saveNew: 'حفظ محتوى جديد',
+    pasteUrl: 'الصق الرابط هنا...',
+    titleOpt: 'عنوان (اختياري)',
+    notes: 'ملاحظات…',
+    cancel: 'إلغاء',
+    saveNow: '✓ حفظ الآن',
+    home: 'الرئيسية',
+    language: 'اللغة',
+    darkMode: 'الوضع الداكن',
+    version: 'الإصدار',
+    dir: 'rtl'
+  },
+  en: {
+    appName: 'SmartMark',
+    totalSaved: 'items saved',
+    search: 'Search your saved items...',
+    all: 'All',
+    favorites: '⭐ Favorites',
+    videos: '🎬 Videos',
+    images: '🖼 Images',
+    links: '🔗 Links',
+    total: 'Total',
+    fav: 'Favorites',
+    folders: 'Folders',
+    saved: '📌 Saved',
+    savedDesc: 'All saved items sorted by date',
+    foldersTitle: '📁 Folders',
+    settings: '⚙️ Settings',
+    newFolder: 'New Folder',
+    saveNew: 'Save New Content',
+    pasteUrl: 'Paste link here...',
+    titleOpt: 'Title (optional)',
+    notes: 'Notes...',
+    cancel: 'Cancel',
+    saveNow: '✓ Save Now',
+    home: 'Home',
+    language: 'Language',
+    darkMode: 'Dark Mode',
+    version: 'Version',
+    dir: 'ltr'
+  }
+};
+
+let currentLang = localStorage.getItem('sm_lang') || 'ar';
+
+function applyTranslations(lang) {
+  const t = TRANSLATIONS[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = t.dir;
+
+  // شريط البحث
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.placeholder = t.search;
+
+  // الفلاتر
+  const chips = document.querySelectorAll('.chip');
+  const chipTexts = [t.all, t.favorites, t.videos, t.images, t.links];
+  chips.forEach((chip, i) => { if (chipTexts[i]) chip.textContent = chipTexts[i]; });
+
+  // عناوين التنقل
+  const navLabels = document.querySelectorAll('.nav-item span');
+  const navTexts = [t.home, t.saved, t.folders, t.settings];
+  navLabels.forEach((label, i) => { if (navTexts[i]) label.textContent = navTexts[i]; });
+
+  // نافذة الإضافة
+  const urlInput = document.getElementById('sheetUrlInput');
+  if (urlInput) urlInput.placeholder = t.pasteUrl;
+  const titleInput = document.getElementById('sheetTitle');
+  if (titleInput) titleInput.placeholder = t.titleOpt;
+  const notesInput = document.getElementById('sheetNotes');
+  if (notesInput) notesInput.placeholder = t.notes;
+
+  // عناوين الصفحات
+  const savedHeader = document.querySelector('#screen-saved .saved-header h2');
+  if (savedHeader) savedHeader.textContent = t.saved;
+  const savedDesc = document.querySelector('#screen-saved .saved-header p');
+  if (savedDesc) savedDesc.textContent = t.savedDesc;
+  
+  const foldersHeader = document.querySelector('#screen-folders h2');
+  if (foldersHeader) foldersHeader.textContent = t.foldersTitle;
+  
+  const settingsHeader = document.querySelector('#screen-settings .settings-header h2');
+  if (settingsHeader) settingsHeader.textContent = t.settings;
+
+  // الإعدادات - نصوص
+  const settingLabels = document.querySelectorAll('.setting-label');
+  const settingDescs = document.querySelectorAll('.setting-desc');
+  
+  const settingsTexts = {
+    ar: ['الوضع الداكن','تشغيل مفعّل حالياً','اللون الأساسي','بنفسجي — Indigo','مزامنة تلقائية','يتزامن كل 30 دقيقة','Wi-Fi فقط','لا يستهلك بيانات الجوال','مسح ذاكرة التخزين','24 ميغابايت مستخدمة','الإصدار','SmartMark Pro 1.0.0','سياسة الخصوصية','قيّم التطبيق'],
+    en: ['Dark Mode','Currently enabled','Primary Color','Purple — Indigo','Auto Sync','Syncs every 30 minutes','Wi-Fi Only','No mobile data used','Clear Storage','24 MB used','Version','SmartMark Pro 1.0.0','Privacy Policy','Rate the App']
+  };
+  
+  const labels = settingsTexts[lang];
+  settingLabels.forEach((el, i) => { if (labels[i*2] !== undefined) el.textContent = labels[i*2]; });
+  settingDescs.forEach((el, i) => { if (labels[i*2+1] !== undefined) el.textContent = labels[i*2+1]; });
+
+  // إحصائيات stat-label
+  const statLabels = document.querySelectorAll('.stat-label');
+  const statTexts = lang === 'ar' ? ['إجمالي','مفضلة','مجلدات'] : ['Total','Favorites','Folders'];
+  statLabels.forEach((el, i) => { if (statTexts[i]) el.textContent = statTexts[i]; });
+
+  // زر إنشاء مجلد جديد
+  const newFolderBtn = document.querySelector('.new-folder-card p');
+  if (newFolderBtn) newFolderBtn.textContent = t.newFolder;
+
+  // عنوان نافذة الإضافة
+  const sheetTitle = document.querySelector('.sheet-title');
+  if (sheetTitle) sheetTitle.textContent = t.saveNew;
+
+  // أزرار الإلغاء والحفظ
+  const cancelBtn = document.querySelector('.btn-cancel');
+  if (cancelBtn) cancelBtn.textContent = t.cancel;
+  const saveBtn = document.querySelector('.btn-save');
+  if (saveBtn) saveBtn.textContent = t.saveNow;
+
+  // "الأحدث" في Saved
+  const recentTitle = document.getElementById('recentTitle');
+  if (recentTitle) recentTitle.textContent = lang === 'ar' ? 'الأحدث' : 'Recent';
+
+  // زر التحديد في المحفوظات
+  const btnSavedSelectText = document.getElementById('btnSavedSelectText');
+  if (btnSavedSelectText) btnSavedSelectText.textContent = lang === 'ar' ? 'تحديد' : 'Select';
+  const btnDeleteSaved = document.getElementById('btnDeleteSaved');
+  if (btnDeleteSaved) btnDeleteSaved.textContent = lang === 'ar' ? '🗑 حذف' : '🗑 Delete';
+  const btnMoveSaved = document.getElementById('btnMoveSaved');
+  if (btnMoveSaved) btnMoveSaved.textContent = lang === 'ar' ? '📂 نقل' : '📂 Move';
+
+  // اسم المستخدم
+  const profileName = document.getElementById('profileName');
+  if (profileName) profileName.textContent = lang === 'ar' ? 'قاسم المستخدم' : 'User';
+
+  // قيّم التطبيق
+  const rateApp = document.getElementById('rateApp');
+  if (rateApp) rateApp.textContent = lang === 'ar' ? 'قيّم التطبيق' : 'Rate the App';
+
+  // زر + جديد
+  const btnNewFolder = document.getElementById('btnNewFolder');
+  if (btnNewFolder) btnNewFolder.textContent = lang === 'ar' ? '+ جديد' : '+ New';
+
+  // نافذة المجلد الجديد
+  const folderSheetTitle = document.getElementById('folderSheetTitle');
+  if (folderSheetTitle) folderSheetTitle.textContent = lang === 'ar' ? '📁 مجلد جديد' : '📁 New Folder';
+  const folderNameInput = document.getElementById('folderNameInput');
+  if (folderNameInput) folderNameInput.placeholder = lang === 'ar' ? 'اسم المجلد...' : 'Folder name...';
+  const folderIconLabel = document.getElementById('folderIconLabel');
+  if (folderIconLabel) folderIconLabel.textContent = lang === 'ar' ? 'اختر أيقونة:' : 'Choose icon:';
+  const folderColorLabel = document.getElementById('folderColorLabel');
+  if (folderColorLabel) folderColorLabel.textContent = lang === 'ar' ? 'اختر لوناً:' : 'Choose color:';
+  const btnFolderCancel = document.getElementById('btnFolderCancel');
+  if (btnFolderCancel) btnFolderCancel.textContent = lang === 'ar' ? 'إلغاء' : 'Cancel';
+  const btnFolderSave = document.getElementById('btnFolderSave');
+  if (btnFolderSave) btnFolderSave.textContent = lang === 'ar' ? '✓ إنشاء' : '✓ Create';
+
+  // شاشة المذكرات
+  const notesTitle = document.getElementById('notesTitle');
+  if (notesTitle) notesTitle.textContent = lang === 'ar' ? '📝 مذكراتي' : '📝 My Notes';
+  const btnAddNote = document.getElementById('btnAddNote');
+  if (btnAddNote) btnAddNote.textContent = lang === 'ar' ? '+ جديد' : '+ New';
+  const notesSearch = document.getElementById('notesSearch');
+  if (notesSearch) notesSearch.placeholder = lang === 'ar' ? 'ابحث في المذكرات...' : 'Search notes...';
+  const navNotesLabel = document.getElementById('nav-notes-label');
+  if (navNotesLabel) navNotesLabel.textContent = lang === 'ar' ? 'مذكرات' : 'Notes';
+  const navSettingsLabel = document.getElementById('nav-settings-label');
+  if (navSettingsLabel) navSettingsLabel.textContent = lang === 'ar' ? 'الإعدادات' : 'Settings';
+  const btnSaveNote = document.getElementById('btnSaveNote');
+  if (btnSaveNote) btnSaveNote.textContent = lang === 'ar' ? 'حفظ' : 'Save';
+  renderNotes();
+
+  // أزرار تفاصيل العنصر
+  const btnOpenUrl = document.getElementById('btnOpenUrl');
+  if (btnOpenUrl) btnOpenUrl.textContent = lang === 'ar' ? 'فتح الرابط' : 'Open Link';
+  const btnCopyUrl = document.getElementById('btnCopyUrl');
+  if (btnCopyUrl) btnCopyUrl.textContent = lang === 'ar' ? 'نسخ الرابط' : 'Copy Link';
+
+  // تسمية الملاحظات في التفاصيل
+  const detailNotesLabel = document.getElementById('detailNotesLabel');
+  if (detailNotesLabel) detailNotesLabel.textContent = lang === 'ar' ? 'الملاحظات' : 'Notes';
+  
+  // تسمية اختيار الأيقونة
+  const iconPickerLabel = document.getElementById('iconPickerLabel');
+  if (iconPickerLabel) iconPickerLabel.textContent = lang === 'ar' ? 'اختر أيقونة:' : 'Choose icon:';
+
+  // زر الحذف
+  const btnDelete = document.getElementById('btnDelete');
+  if (btnDelete) btnDelete.textContent = lang === 'ar' ? 'حذف' : 'Delete';
+
+  // أزرار التعديل والنقل
+  const btnEdit = document.getElementById('btnEdit');
+  if (btnEdit) btnEdit.textContent = lang === 'ar' ? 'تعديل' : 'Edit';
+  const editSheetTitle = document.getElementById('editSheetTitle');
+  if (editSheetTitle) editSheetTitle.textContent = lang === 'ar' ? '✏️ تعديل العنصر' : '✏️ Edit Item';
+  const moveFolderLabel = document.getElementById('moveFolderLabel');
+  if (moveFolderLabel) moveFolderLabel.textContent = lang === 'ar' ? '📂 نقل إلى مجلد:' : '📂 Move to folder:';
+  const btnEditCancel = document.getElementById('btnEditCancel');
+  if (btnEditCancel) btnEditCancel.textContent = lang === 'ar' ? 'إلغاء' : 'Cancel';
+  const btnEditSave = document.getElementById('btnEditSave');
+  if (btnEditSave) btnEditSave.textContent = lang === 'ar' ? '✓ حفظ التعديل' : '✓ Save Changes';
+
+  // عناوين أقسام الإعدادات
+  const settingsMap = {
+    'sct_appearance': {ar:'المظهر', en:'Appearance'},
+    'sct_sync': {ar:'المزامنة والتخزين', en:'Sync & Storage'},
+    'sct_about': {ar:'حول التطبيق', en:'About'},
+    'sl_dark': {ar:'الوضع الداكن', en:'Dark Mode'},
+    'sd_dark': {ar:'تشغيل مفعّل حالياً', en:'Currently enabled'},
+    'sl_color': {ar:'اللون الأساسي', en:'Primary Color'},
+    'sd_color': {ar:'بنفسجي — Indigo', en:'Purple — Indigo'},
+    'sl_sync': {ar:'مزامنة تلقائية', en:'Auto Sync'},
+    'sd_sync': {ar:'يتزامن كل 30 دقيقة', en:'Syncs every 30 min'},
+    'sl_wifi': {ar:'Wi-Fi فقط', en:'Wi-Fi Only'},
+    'sd_wifi': {ar:'لا يستهلك بيانات الجوال', en:'No mobile data used'},
+    'sl_clear': {ar:'مسح ذاكرة التخزين', en:'Clear Storage'},
+    'sd_clear': {ar:'24 ميغابايت مستخدمة', en:'24 MB used'},
+    'sct_lang': {ar:'اللغة', en:'Language'},
+    'btn_clear': {ar:'مسح', en:'Clear'},
+    'sct_security': {ar:'الأمان', en:'Security'},
+    'sl_lock': {ar:'قفل التطبيق', en:'App Lock'},
+    'sd_lock': {ar:'حماية بـ PIN', en:'PIN Protection'},
+    'sl_changepin': {ar:'تغيير رمز PIN', en:'Change PIN'},
+    'btn_changepin': {ar:'تغيير', en:'Change'},
+  };
+  Object.keys(settingsMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = settingsMap[id][lang] || settingsMap[id]['ar'];
+  });
+
+  // إعادة رسم القوائم
+  if (typeof renderItems === 'function') { renderItems(); renderSavedList(); renderFolders(); }
+}
+
+function switchLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('sm_lang', lang);
+  document.querySelectorAll('.lang-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('lang-' + lang).classList.add('selected');
+  applyTranslations(lang);
+  showToast(lang === 'ar' ? '🇸🇦 تم تغيير اللغة إلى العربية' : '🇺🇸 Language changed to English');
+}
+
+// ==========================================
+// TOAST
+// ==========================================
+function showToast(msg, bg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  if (bg) t.style.background = bg;
+  else t.style.background = 'var(--success)';
+  t.classsList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDetail(); hideShareSheet(); closeEdit(); }
+});
+
+// زر الرجوع في أندرويد - Capacitor
+document.addEventListener('backbutton', handleBack, false);
+
+// دعم إضافي عبر Capacitor App Plugin
+if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+  try {
+    Capacitor.Plugins.App.addListener('backButton', handleBack);
+  } catch(e) {}
+}
+
+function handleBack() {
+  if (document.getElementById('lockScreen') && 
+      document.getElementById('lockScreen').style.display === 'flex') return;
+  if (document.getElementById('detailView').classList.contains('show')) { closeDetail(); return; }
+  if (document.getElementById('editSheet').classList.contains('show')) { closeEdit(); return; }
+  if (document.getElementById('shareSheet').classList.contains('show')) { hideShareSheet(); return; }
+  if (document.getElementById('noteEditor') && 
+      document.getElementById('noteEditor').style.display === 'flex') { closeNote(); return; }
+}
+
+document.addEventListener('backbutton', () => {
+  if (document.getElementById('lockScreen').style.display === 'flex') return;
+  if (document.getElementById('detailView').classList.contains('show')) { closeDetail(); return; }
+  if (document.getElementById('editSheet').classList.contains('show')) { closeEdit(); return; }
+  if (document.getElementById('shareSheet').classList.contains('show')) { hideShareSheet(); return; }
+  if (document.getElementById('noteEditor').style.display === 'flex') { closeNote(); return; }
+});
+
+// دعم زر الرجوع في المتصفح
+window.addEventListener('popstate', () => {
+  if (document.getElementById('detailView').classList.contains('show')) { closeDetail(); return; }
+  if (document.getElementById('editSheet').classList.contains('show')) { closeEdit(); return; }
+  if (document.getElementById('shareSheet').classList.contains('show')) { hideShareSheet(); return; }
+  if (document.getElementById('noteEditor').style.display === 'flex') { closeNote(); return; }
+});
+
+// ==========================================
+// EDIT & MOVE
+// ==========================================
+function editDetail() {
+  if (!currentDetailIndex) return;
+  const item = items.find(i => i.id === currentDetailIndex);
+  if (!item) return;
+  
+  document.getElementById('editTitle').value = item.title;
+  document.getElementById('editNotes').value = item.notes || '';
+  selectedMoveFolder = item.folderId;
+  
+  // بناء قائمة المجلدات
+  buildFolderMoveList(item.folderId);
+  
+  const overlay = document.getElementById('editOverlay');
+  const sheet = document.getElementById('editSheet');
+  overlay.style.display = 'block';
+  overlay.classList.add('show');
+  sheet.style.display = 'block';
+  setTimeout(() => sheet.classList.add('show'), 10);
+}
+
+function buildFolderMoveList(currentFolderId) {
+  const list = document.getElementById('folderMoveList');
+  const noFolderText = currentLang === 'ar' ? 'بدون مجلد' : 'No folder';
+  
+  list.innerHTML = `
+    <div onclick="selectMoveFolder(null, this)" 
+         style="padding:8px 14px;border-radius:100px;border:2px solid ${!currentFolderId ? 'var(--primary)' : 'var(--border)'};
+                background:${!currentFolderId ? 'var(--primary-glow)' : 'var(--bg3)'};
+                cursor:pointer;font-size:13px;font-weight:700;color:var(--text1);transition:all 0.2s"
+         data-folder-id="null">
+      📌 ${noFolderText}
+    </div>
+    ${folders.map(f => `
+      <div onclick="selectMoveFolder(${f.id}, this)"
+           style="padding:8px 14px;border-radius:100px;border:2px solid ${currentFolderId === f.id ? 'var(--primary)' : 'var(--border)'};
+                  background:${currentFolderId === f.id ? 'var(--primary-glow)' : 'var(--bg3)'};
+                  cursor:pointer;font-size:13px;font-weight:700;color:var(--text1);transition:all 0.2s"
+           data-folder-id="${f.id}">
+        ${f.icon} ${f.name}
+      </div>
+    `).join('')}
+  `;
+}
+
+let selectedMoveFolder = undefined;
+
+function selectMoveFolder(folderId, el) {
+  selectedMoveFolder = folderId;
+  document.querySelectorAll('#folderMoveList > div').forEach(d => {
+    const isSelected = (folderId === null && d.dataset.folderId === 'null') || 
+                       (d.dataset.folderId == folderId);
+    d.style.borderColor = isSelected ? 'var(--primary)' : 'var(--border)';
+    d.style.background = isSelected ? 'var(--primary-glow)' : 'var(--bg3)';
+  });
+}
+
+function closeEdit() {
+  const sheet = document.getElementById('editSheet');
+  const overlay = document.getElementById('editOverlay');
+  sheet.classList.remove('show');
+  overlay.classList.remove('show');
+  setTimeout(() => {
+    sheet.style.display = 'none';
+    overlay.style.display = 'none';
+  }, 350);
+  selectedMoveFolder = undefined;
+}
+
+function saveEdit() {
+  if (!currentDetailIndex) return;
+  const item = items.find(i => i.id === currentDetailIndex);
+  if (!item) return;
+  
+  const newTitle = document.getElementById('editTitle').value.trim();
+  if (newTitle) item.title = newTitle;
+  item.notes = document.getElementById('editNotes').value.trim();
+  if (selectedMoveFolder !== undefined) item.folderId = selectedMoveFolder;
+  
+  saveItems();
+  closeEdit();
+  
+  // تحديث التفاصيل المفتوحة
+  document.getElementById('detailTitle').textContent = item.title;
+  document.getElementById('detailNotes').textContent = item.notes || '—';
+  
+  renderItems();
+  renderSavedList();
+  showToast(currentLang === 'ar' ? '✓ تم التعديل' : '✓ Updated');
+}
+
+// ==========================================
+// NOTES
+// ==========================================
+let notes = [];
+let currentNoteId = null;
+let autoSaveTimer = null;
+
+function loadNotes() {
+  try {
+    const d = localStorage.getItem('sm_notes');
+    if (d) notes = JSON.parse(d);
+  } catch(e) { notes = []; }
+}
+
+function saveNotes() {
+  try { localStorage.setItem('sm_notes', JSON.stringify(notes)); } catch(e) {}
+}
+
+function renderNotes(filter = '') {
+  const container = document.getElementById('notesList');
+  const filtered = notes.filter(n => 
+    !filter || n.title.includes(filter) || n.content.includes(filter)
+  );
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">📝</div>
+        <h3>${currentLang === 'ar' ? 'لا توجد مذكرات' : 'No notes yet'}</h3>
+        <p>${currentLang === 'ar' ? 'اضغط + لإضافة مذكرة جديدة' : 'Tap + to add a new note'}</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(note => `
+    <div onclick="openNote(${note.id})" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;"
+         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div onclick="event.stopPropagation();deleteNote(${note.id})" 
+             style="color:var(--error);font-size:16px;cursor:pointer;padding:4px">🗑</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
+        ${note.contentText || note.content?.replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:left">${note.date}</div>
+    </div>
+  `).join('');
+}
+
+function filterNotes() {
+  const q = document.getElementById('notesSearch').value;
+  renderNotes(q);
+}
+
+function addNote() {
+  currentNoteId = Date.now();
+  document.getElementById('noteTitleInput').value = '';
+  document.getElementById('noteContent').innerHTML = '';
+  document.getElementById('noteAutoSave').textContent = currentLang === 'ar' ? 'سيتم الحفظ تلقائياً' : 'Auto-save enabled';
+  document.getElementById('noteEditor').style.display = 'flex';
+  setTimeout(() => document.getElementById('noteContent').focus(), 100);
+}
+
+function openNote(id) {
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+  currentNoteId = id;
+  document.getElementById('noteTitleInput').value = note.title;
+  const noteEl = document.getElementById('noteContent');
+  noteEl.innerHTML = note.content || '';
+  document.getElementById('noteAutoSave').textContent = currentLang === 'ar' ? 'محفوظ ✓' : 'Saved ✓';
+  document.getElementById('noteEditor').style.display = 'flex';
+}
+
+function closeNote() {
+  saveCurrentNote();
+  document.getElementById('noteEditor').style.display = 'none';
+  currentNoteId = null;
+  renderNotes();
+}
+
+function saveCurrentNote() {
+  const title = document.getElementById('noteTitleInput').value.trim();
+  const noteEl = document.getElementById('noteContent');
+  const noteText = noteEl.innerText.trim();
+  const noteHtml = noteEl.innerHTML;
+  if (!title && !noteText) return;
+
+  const existing = notes.findIndex(n => n.id === currentNoteId);
+  const noteData = {
+    id: currentNoteId,
+    title,
+    content: noteEl.innerHTML,
+    contentText: noteEl.innerText,
+    date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')
+  };
+
+  if (existing >= 0) {
+    notes[existing] = noteData;
+  } else {
+    notes.unshift(noteData);
+  }
+  saveNotes();
+  document.getElementById('noteAutoSave').textContent = currentLang === 'ar' ? 'محفوظ ✓' : 'Saved ✓';
+}
+
+function autoSaveNote() {
+  clearTimeout(autoSaveTimer);
+  document.getElementById('noteAutoSave').textContent = currentLang === 'ar' ? 'جاري الحفظ...' : 'Saving...';
+  autoSaveTimer = setTimeout(() => saveCurrentNote(), 1000);
+}
+
+function deleteNote(id) {
+  if (!confirm(currentLang === 'ar' ? 'حذف هذه المذكرة؟' : 'Delete this note?')) return;
+  notes = notes.filter(n => n.id !== id);
+  saveNotes();
+  renderNotes();
+  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+}
+
+// ==========================================
+// NOTE FORMATTING
+// ==========================================
+let noteFontSize = 15;
+
+function formatNote(type) {
+  document.getElementById('noteContent').focus();
+  document.execCommand(type, false, null);
+  autoSaveNote();
+}
+
+function undoNote() {
+  document.getElementById('noteContent').focus();
+  document.execCommand('undo', false, null);
+  autoSaveNote();
+}
+
+function changeFontSize(delta) {
+  noteFontSize = Math.max(12, Math.min(24, noteFontSize + delta));
+  document.getElementById('noteContent').style.fontSize = noteFontSize + 'px';
+}
+
+// ==========================================
+// MULTI SELECT
+// ==========================================
+let selectMode = false;
+let selectedItems = new Set();
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedItems.clear();
+  const btn = document.getElementById('selectModeBtn');
+  const bar = document.getElementById('selectionBar');
+  if (selectMode) {
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    bar.style.display = 'flex';
+    showToast(currentLang === 'ar' ? 'اضغط على العناصر لتحديدها' : 'Tap items to select');
+  } else {
+    cancelSelect();
+  }
+  renderItems();
+}
+
+function cancelSelect() {
+  selectMode = false;
+  selectedItems.clear();
+  const btn = document.getElementById('selectModeBtn');
+  btn.style.background = '';
+  btn.style.color = '';
+  document.getElementById('selectionBar').style.display = 'none';
+  renderItems();
+}
+
+function toggleItemSelect(id, event) {
+  event.stopPropagation();
+  if (selectedItems.has(id)) {
+    selectedItems.delete(id);
+  } else {
+    selectedItems.add(id);
+  }
+  updateSelectionCount();
+  renderItems();
+}
+
+function updateSelectionCount() {
+  const count = selectedItems.size;
+  const el = document.getElementById('selectionCount');
+  if (el) el.textContent = currentLang === 'ar' ? `${count} محدد` : `${count} selected`;
+}
+
+function deleteSelected() {
+  if (selectedItems.size === 0) return;
+  const msg = currentLang === 'ar' 
+    ? `حذف ${selectedItems.size} عنصر؟` 
+    : `Delete ${selectedItems.size} items?`;
+  if (!confirm(msg)) return;
+  items = items.filter(i => !selectedItems.has(i.id));
+  saveItems();
+  cancelSelect();
+  renderItems();
+  renderSavedList();
+  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+}
+
+function moveSelected() {
+  if (selectedItems.size === 0) return;
+  const folderName = prompt(currentLang === 'ar' ? 'اسم المجلد للنقل إليه:' : 'Folder name to move to:');
+  if (!folderName) return;
+  const folder = folders.find(f => f.name === folderName);
+  if (!folder) {
+    showToast(currentLang === 'ar' ? '❌ المجلد غير موجود' : '❌ Folder not found', 'var(--error)');
+    return;
+  }
+  items.forEach(i => {
+    if (selectedItems.has(i.id)) i.folderId = folder.id;
+  });
+  saveItems();
+  cancelSelect();
+  renderItems();
+  showToast(currentLang === 'ar' ? '📂 تم النقل' : '📂 Moved');
+}
+
+// ==========================================
+// LOCK SCREEN
+// ==========================================
+let pinBuffer = '';
+let isSettingPin = false;
+let tempPin = '';
+
+function toggleLock(btn) {
+  btn.classList.toggle('on');
+  const isOn = btn.classList.contains('on');
+  if (isOn) {
+    setupPin(false);
+  } else {
+    localStorage.removeItem('sm_pin');
+    document.getElementById('changePinRow').style.display = 'none';
+    document.getElementById('sd_lock').textContent = currentLang === 'ar' ? 'حماية بـ PIN' : 'PIN Protection';
+    showToast(currentLang === 'ar' ? '🔓 تم إلغاء القفل' : '🔓 Lock disabled');
+  }
+}
+
+function setupPin(isChange) {
+  isSettingPin = true;
+  tempPin = '';
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('lockTitle').textContent = currentLang === 'ar' ? 'أنشئ رمز PIN' : 'Create PIN';
+  document.getElementById('lockDesc').textContent = currentLang === 'ar' ? 'أدخل رمز PIN من 4 أرقام' : 'Enter a 4-digit PIN';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('lockScreen').style.display = 'flex';
+}
+
+function checkLock() {
+  const savedPin = localStorage.getItem('sm_pin');
+  if (!savedPin) return; // لا يوجد قفل
+  pinBuffer = '';
+  isSettingPin = false;
+  updatePinDots();
+  document.getElementById('lockTitle').textContent = currentLang === 'ar' ? 'SmartMark محمي' : 'SmartMark Locked';
+  document.getElementById('lockDesc').textContent = currentLang === 'ar' ? 'أدخل رمز PIN للمتابعة' : 'Enter PIN to continue';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('lockScreen').style.display = 'flex';
+  
+  // محاولة البصمة تلقائياً
+  setTimeout(() => pinBiometric(), 500);
+}
+
+function pinInput(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updatePinDots();
+  
+  if (pinBuffer.length === 4) {
+    setTimeout(() => {
+      if (isSettingPin) {
+        if (!tempPin) {
+          tempPin = pinBuffer;
+          pinBuffer = '';
+          updatePinDots();
+          document.getElementById('lockDesc').textContent = currentLang === 'ar' ? 'أعد إدخال رمز PIN للتأكيد' : 'Confirm your PIN';
+        } else {
+          if (pinBuffer === tempPin) {
+            localStorage.setItem('sm_pin', pinBuffer);
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('lockToggle').classList.add('on');
+            document.getElementById('changePinRow').style.display = 'flex';
+            document.getElementById('sd_lock').textContent = currentLang === 'ar' ? 'القفل مفعّل ✓' : 'Lock enabled ✓';
+            isSettingPin = false;
+            showToast(currentLang === 'ar' ? '🔐 تم تفعيل القفل' : '🔐 Lock enabled');
+          } else {
+            document.getElementById('pinError').textContent = currentLang === 'ar' ? '❌ الرمز غير متطابق' : '❌ PINs do not match';
+            tempPin = '';
+            pinBuffer = '';
+            updatePinDots();
+            document.getElementById('lockDesc').textContent = currentLang === 'ar' ? 'أدخل رمز PIN من 4 أرقام' : 'Enter a 4-digit PIN';
+          }
+        }
+      } else {
+        const savedPin = localStorage.getItem('sm_pin');
+        if (pinBuffer === savedPin) {
+          document.getElementById('lockScreen').style.display = 'none';
+          showToast(currentLang === 'ar' ? '🔓 تم فتح القفل' : '🔓 Unlocked');
+        } else {
+          document.getElementById('pinError').textContent = currentLang === 'ar' ? '❌ رمز PIN خاطئ' : '❌ Wrong PIN';
+          pinBuffer = '';
+          updatePinDots();
+          setTimeout(() => document.getElementById('pinError').textContent = '', 2000);
+        }
+      }
+    }, 100);
+  }
+}
+
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((dot, i) => dot.classList.toggle('filled', i < pinBuffer.length));
+}
+
+async function pinBiometric() {
+  if (!window.PublicKeyCredential) return;
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (available) {
+      document.getElementById('btnFaceId').style.display = 'block';
+      // محاكاة البصمة - في التطبيق الحقيقي تستخدم WebAuthn
+      showToast(currentLang === 'ar' ? '👆 البصمة غير مدعومة في هذا الإصدار' : '👆 Biometric not supported in this version');
+    }
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

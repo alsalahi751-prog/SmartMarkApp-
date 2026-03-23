@@ -1039,7 +1039,10 @@ body::before {
     <div class="screen" id="screen-notes">
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="notesTitle">📝 مذكراتي</h2>
-        <div class="see-all" onclick="addNote()" id="btnAddNote">+ جديد</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="see-all" onclick="openTrash()" style="color:var(--text3)" id="btnTrash">🗑</div>
+          <div class="see-all" onclick="addNote()" id="btnAddNote">+ جديد</div>
+        </div>
       </div>
 
       <!-- بحث في المذكرات -->
@@ -1053,7 +1056,33 @@ body::before {
       <div id="notesList" style="padding:16px 20px"></div>
     </div>
 
-    <!-- نافذة تعديل مذكرة -->
+    <!-- نافذة خيارات المذكرة -->
+<div id="noteOptionsOverlay" onclick="closeNoteOptions()" 
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:800"></div>
+<div id="noteOptionsSheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:24px 24px 0 0;border-top:1px solid var(--border);z-index:801;padding:20px;transform:translateY(100%);transition:transform 0.3s">
+  <div style="width:40px;height:4px;background:var(--bg4);border-radius:2px;margin:0 auto 20px"></div>
+  <div id="noteOptionsTitle" style="font-size:16px;font-weight:800;margin-bottom:16px;text-align:right">خيارات المذكرة</div>
+  <button onclick="confirmDeleteNote()" style="width:100%;padding:14px;background:var(--error);border:none;border-radius:12px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:right;display:flex;align-items:center;gap:10px;flex-direction:row-reverse">
+    <span>🗑</span> <span id="btnDeleteOneNote">حذف هذه المذكرة</span>
+  </button>
+  <button onclick="confirmDeleteAllNotes()" style="width:100%;padding:14px;background:var(--bg3);border:1px solid var(--error);border-radius:12px;color:var(--error);font-family:system-ui,Tahoma,Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:right;display:flex;align-items:center;gap:10px;flex-direction:row-reverse">
+    <span>🗑🗑</span> <span id="btnDeleteAllNotes">حذف الكل</span>
+  </button>
+  <button onclick="closeNoteOptions()" style="width:100%;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-family:system-ui,Tahoma,Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:center" id="btnCancelNoteOptions">إلغاء</button>
+</div>
+
+<!-- سلة المحذوفات -->
+<div id="trashOverlay" onclick="closeTrash()" 
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800"></div>
+<div id="trashSheet" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:801;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-direction:row-reverse">
+    <div style="font-size:18px;font-weight:800" id="trashTitle">🗑 سلة المحذوفات</div>
+    <button onclick="closeTrash()" style="background:var(--bg3);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;color:var(--text1);font-size:18px;cursor:pointer">✕</button>
+  </div>
+  <div id="trashList" style="padding:16px 20px;overflow-y:auto;flex:1"></div>
+</div>
+
+<!-- نافذة تعديل مذكرة -->
     <div id="noteEditor" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:700;flex-direction:column;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-direction:row-reverse">
         <button onclick="closeNote()" style="background:var(--bg3);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;color:var(--text1);font-size:18px;cursor:pointer">✕</button>
@@ -1075,6 +1104,10 @@ body::before {
                   style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:17px;font-weight:700;cursor:pointer">A+</button>
           <button onmousedown="event.preventDefault();undoNote()" title="تراجع"
                   style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:16px;cursor:pointer">↩</button>
+          <input type="color" id="textColorPicker" value="#6366f1"
+                 onchange="changeTextColor(this.value)"
+                 title="${currentLang === 'ar' ? 'لون النص' : 'Text color'}"
+                 style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;padding:2px"/>
         </div>
         <span id="noteAutoSave" style="font-size:11px;color:var(--text3)">يتم الحفظ تلقائياً ✓</span>
       </div>
@@ -1425,6 +1458,7 @@ function showApp() {
 
   // تحميل المذكرات
   loadNotes();
+  loadDeletedNotes();
   renderNotes();
 
   // تحقق من القفل
@@ -2441,6 +2475,19 @@ function showToast(msg, bg) {
 }
 
 // Keyboard nav
+// Long Press للمذكرات
+let noteLongPressTimer = null;
+document.addEventListener('touchstart', (e) => {
+  const noteCard = e.target.closest('[id^="note-card-"]');
+  if (!noteCard) return;
+  noteLongPressTimer = setTimeout(() => {
+    const id = parseInt(noteCard.id.replace('note-card-', ''));
+    showNoteOptions(id);
+  }, 600);
+}, {passive: true});
+document.addEventListener('touchend', () => clearTimeout(noteLongPressTimer), {passive: true});
+document.addEventListener('touchmove', () => clearTimeout(noteLongPressTimer), {passive: true});
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeDetail(); hideShareSheet(); closeEdit(); }
 });
@@ -2578,8 +2625,115 @@ function saveEdit() {
 // NOTES
 // ==========================================
 let notes = [];
+let deletedNotes = [];
 let currentNoteId = null;
 let autoSaveTimer = null;
+let noteOptionsId = null;
+
+function showNoteOptions(id) {
+  noteOptionsId = id;
+  const note = notes.find(n => n.id === id);
+  if (note) {
+    document.getElementById('noteOptionsTitle').textContent = note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled');
+  }
+  document.getElementById('noteOptionsOverlay').style.display = 'block';
+  const sheet = document.getElementById('noteOptionsSheet');
+  sheet.style.display = 'block';
+  setTimeout(() => sheet.style.transform = 'translateY(0)', 10);
+}
+
+function closeNoteOptions() {
+  document.getElementById('noteOptionsSheet').style.transform = 'translateY(100%)';
+  setTimeout(() => {
+    document.getElementById('noteOptionsSheet').style.display = 'none';
+    document.getElementById('noteOptionsOverlay').style.display = 'none';
+  }, 300);
+}
+
+function confirmDeleteNote() {
+  closeNoteOptions();
+  const note = notes.find(n => n.id === noteOptionsId);
+  if (note) {
+    deletedNotes.unshift({...note, deletedAt: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')});
+    saveDeletedNotes();
+  }
+  notes = notes.filter(n => n.id !== noteOptionsId);
+  saveNotes();
+  renderNotes();
+  showToast(currentLang === 'ar' ? '🗑 تم النقل لسلة المحذوفات' : '🗑 Moved to trash');
+}
+
+function confirmDeleteAllNotes() {
+  closeNoteOptions();
+  if (!confirm(currentLang === 'ar' ? 'حذف جميع المذكرات؟' : 'Delete all notes?')) return;
+  deletedNotes = [...notes.map(n => ({...n, deletedAt: new Date().toLocaleDateString()})), ...deletedNotes];
+  saveDeletedNotes();
+  notes = [];
+  saveNotes();
+  renderNotes();
+  showToast(currentLang === 'ar' ? '🗑 تم حذف الكل' : '🗑 All deleted');
+}
+
+function saveDeletedNotes() {
+  try { localStorage.setItem('sm_deleted_notes', JSON.stringify(deletedNotes.slice(0, 50))); } catch(e) {}
+}
+
+function loadDeletedNotes() {
+  try {
+    const d = localStorage.getItem('sm_deleted_notes');
+    if (d) deletedNotes = JSON.parse(d);
+  } catch(e) { deletedNotes = []; }
+}
+
+function openTrash() {
+  document.getElementById('trashOverlay').style.display = 'block';
+  const sheet = document.getElementById('trashSheet');
+  sheet.style.display = 'flex';
+  renderTrash();
+}
+
+function closeTrash() {
+  document.getElementById('trashSheet').style.display = 'none';
+  document.getElementById('trashOverlay').style.display = 'none';
+}
+
+function renderTrash() {
+  const list = document.getElementById('trashList');
+  if (deletedNotes.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="emoji">🗑</div><h3>${currentLang === 'ar' ? 'السلة فارغة' : 'Trash is empty'}</h3></div>`;
+    return;
+  }
+  list.innerHTML = deletedNotes.map((note, i) => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-direction:row-reverse">
+        <div style="font-size:15px;font-weight:700">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="restoreNote(${i})" style="background:var(--success);border:none;padding:4px 12px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:12px;cursor:pointer">↩ ${currentLang === 'ar' ? 'استرجاع' : 'Restore'}</button>
+          <button onclick="permanentDelete(${i})" style="background:var(--error);border:none;padding:4px 12px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:12px;cursor:pointer">✕</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">${currentLang === 'ar' ? 'حُذف في:' : 'Deleted:'} ${note.deletedAt}</div>
+    </div>
+  `).join('');
+}
+
+function restoreNote(idx) {
+  const note = deletedNotes.splice(idx, 1)[0];
+  delete note.deletedAt;
+  notes.unshift(note);
+  saveNotes();
+  saveDeletedNotes();
+  renderTrash();
+  renderNotes();
+  showToast(currentLang === 'ar' ? '✓ تم الاسترجاع' : '✓ Restored', 'var(--success)');
+}
+
+function permanentDelete(idx) {
+  if (!confirm(currentLang === 'ar' ? 'حذف نهائي؟' : 'Permanently delete?')) return;
+  deletedNotes.splice(idx, 1);
+  saveDeletedNotes();
+  renderTrash();
+}
 let notesSelectMode = false;
 let notesSelected = new Set();
 
@@ -2670,33 +2824,15 @@ function renderNotes(filter = '') {
   }
 
   container.innerHTML = `
-    <div style="display:flex;justify-content:flex-start;margin-bottom:12px;gap:8px">
-      <button onclick="toggleNotesSelect()" id="btnNotesSelect"
-              style="background:${notesSelectMode ? 'var(--primary)' : 'var(--bg3)'};border:1px solid var(--border);padding:6px 14px;border-radius:8px;color:${notesSelectMode ? '#fff' : 'var(--text2)'};font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
-        ☑ ${currentLang === 'ar' ? 'تحديد' : 'Select'}
-      </button>
-      <button id="btnDeleteNotes" onclick="deleteSelectedNotes()"
-              style="display:${notesSelectMode ? 'block' : 'none'};background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
-        🗑 ${currentLang === 'ar' ? 'حذف المحدد' : 'Delete Selected'}
-      </button>
-      <button id="btnCancelNotesSelect" onclick="cancelNotesSelect()"
-              style="display:${notesSelectMode ? 'block' : 'none'};background:var(--bg3);border:1px solid var(--border);padding:6px 14px;border-radius:8px;color:var(--text2);font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
-        ✕
-      </button>
-    </div>
   ` + filtered.map(note => `
-    <div onclick="${notesSelectMode ? `toggleNoteSelect(${note.id})` : `openNote(${note.id})`}" 
-         style="background:var(--card);border:2px solid ${notesSelected.has(note.id) ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;
-                ${notesSelected.has(note.id) ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
+    <div onclick="openNote(${note.id})"
+         oncontextmenu="event.preventDefault();showNoteOptions(${note.id})"
+         id="note-card-${note.id}"
+         style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;"
+         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        ${notesSelectMode ? `
-          <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);
-                      background:${notesSelected.has(note.id) ? 'var(--primary)' : 'transparent'};
-                      display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">
-            ${notesSelected.has(note.id) ? '✓' : ''}
-          </div>` : `
-          <div onclick="event.stopPropagation();deleteNote(${note.id})" 
-               style="color:var(--error);font-size:16px;cursor:pointer;padding:4px">🗑</div>`}
+        <div onclick="event.stopPropagation();showNoteOptions(${note.id})" 
+             style="color:var(--text3);font-size:18px;cursor:pointer;padding:4px">⋮</div>
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
       </div>
       <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
@@ -2791,6 +2927,12 @@ let noteFontSize = 15;
 function formatNote(type) {
   document.getElementById('noteContent').focus();
   document.execCommand(type, false, null);
+  autoSaveNote();
+}
+
+function changeTextColor(color) {
+  document.getElementById('noteContent').focus();
+  document.execCommand('foreColor', false, color);
   autoSaveNote();
 }
 

@@ -1018,8 +1018,19 @@ body::before {
     <!-- ===== FOLDERS SCREEN ===== -->
     <div class="screen" id="screen-folders">
       <div class="section-header">
-        <h2 style="font-size:26px;font-weight:900">📁 المجلدات</h2>
-        <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
+        <h2 style="font-size:26px;font-weight:900" id="foldersTitle">📁 المجلدات</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="color:var(--text2)">☑</div>
+          <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
+        </div>
+      </div>
+      <!-- شريط تحديد المجلدات -->
+      <div id="foldersSelectionBar" style="display:none;padding:10px 20px;background:var(--primary);align-items:center;justify-content:space-between;flex-direction:row-reverse">
+        <div style="color:#fff;font-weight:700;font-size:14px" id="foldersSelectionCount">0 محدد</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="deleteSelectedFolders()" style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">🗑 حذف</button>
+          <button onclick="cancelFoldersSelect()" style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✕</button>
+        </div>
       </div>
       <div class="folders-grid" id="folders-grid"></div>
     </div>
@@ -1557,7 +1568,7 @@ function renderSavedList() {
       </div>
       <div class="list-info">
         <div class="list-title">${item.title}</div>
-        <div class="list-sub">${p[item.platform].icon} ${item.platform} · ${item.date}</div>
+        <div class="list-sub">${p[item.platform].icon} ${item.platform === 'other' ? (currentLang === 'ar' ? 'رابط' : 'Link') : item.platform} · ${item.date}</div>
       </div>
       <div class="list-badge" style="background:${
         item.type==='video'?'#7c3aed':item.type==='image'?'#0891b2':'#065f46'
@@ -1654,7 +1665,9 @@ function renderFolders() {
   const grid = document.getElementById('folders-grid');
   const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
   grid.innerHTML = folders.map(f => `
-    <div class="folder-card" style="--folder-color:${f.color}" onclick="openFolder(${f.id})">
+    <div class="folder-card" style="--folder-color:${f.color};${foldersSelected.has(f.id) ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}" 
+         onclick="${foldersSelectMode ? `toggleFolderSelect(${f.id}, event)` : `openFolder(${f.id})`}">
+      ${foldersSelectMode ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${foldersSelected.has(f.id) ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">${foldersSelected.has(f.id) ? '✓' : ''}</div>` : ''}
       <div class="folder-icon">${f.icon}</div>
       <div class="folder-name">${f.name}</div>
       <div class="folder-count">${items.filter(i=>i.folderId===f.id).length} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
@@ -1726,7 +1739,7 @@ function renderSavedListInHome() {
       <div class="list-thumb ${p[item.platform].class}"><span>${item.emoji}</span></div>
       <div class="list-info">
         <div class="list-title">${item.title}</div>
-        <div class="list-sub">${p[item.platform].icon} ${item.platform} · ${item.date}</div>
+        <div class="list-sub">${p[item.platform].icon} ${item.platform === 'other' ? (currentLang === 'ar' ? 'رابط' : 'Link') : item.platform} · ${item.date}</div>
       </div>
       <div class="action-mini ${item.fav?'fav-active':''}" 
            onclick="event.stopPropagation();toggleFav(${item.id},this)">⭐</div>
@@ -1836,9 +1849,12 @@ function saveFromSheet() {
     platform.includes('Facebook')?'facebook':platform.includes('YouTube')?'youtube':
     platform.includes('Twitter')?'twitter':'other';
 
+  const finalTitle = title || 
+    (notes ? notes.split('\n')[0].substring(0, 50) : '') ||
+    (currentLang === 'ar' ? `محتوى من ${plKey === 'other' ? 'رابط' : plKey}` : `Content from ${plKey === 'other' ? 'link' : plKey}`);
   const newItem = {
     id: Date.now(), fav: false,
-    title: title || (currentLang === 'ar' ? `محتوى من ${plKey === 'other' ? 'رابط' : plKey}` : `Content from ${plKey === 'other' ? 'link' : plKey}`),
+    title: finalTitle,
     platform: plKey,
     type: types[Math.floor(Math.random()*3)],
     emoji: selectedIcon,
@@ -1957,6 +1973,43 @@ function deleteDetail() {
 // ==========================================
 // FOLDERS
 // ==========================================
+let foldersSelectMode = false;
+let foldersSelected = new Set();
+
+function toggleFoldersSelect() {
+  foldersSelectMode = !foldersSelectMode;
+  foldersSelected.clear();
+  document.getElementById('foldersSelectionBar').style.display = foldersSelectMode ? 'flex' : 'none';
+  renderFolders();
+}
+
+function cancelFoldersSelect() {
+  foldersSelectMode = false;
+  foldersSelected.clear();
+  document.getElementById('foldersSelectionBar').style.display = 'none';
+  renderFolders();
+}
+
+function toggleFolderSelect(id, e) {
+  e.stopPropagation();
+  if (foldersSelected.has(id)) foldersSelected.delete(id);
+  else foldersSelected.add(id);
+  const count = foldersSelected.size;
+  document.getElementById('foldersSelectionCount').textContent = 
+    currentLang === 'ar' ? `${count} محدد` : `${count} selected`;
+  renderFolders();
+}
+
+function deleteSelectedFolders() {
+  if (foldersSelected.size === 0) return;
+  const count = foldersSelected.size;
+  if (!confirm(currentLang === 'ar' ? `حذف ${count} مجلد؟` : `Delete ${count} folders?`)) return;
+  folders = folders.filter(f => !foldersSelected.has(f.id));
+  saveFolders();
+  cancelFoldersSelect();
+  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} مجلد` : `🗑 ${count} folders deleted`);
+}
+
 function saveFolders() {
   try { localStorage.setItem('sm_folders', JSON.stringify(folders)); } catch(e) {}
 }
@@ -2513,6 +2566,49 @@ function saveEdit() {
 let notes = [];
 let currentNoteId = null;
 let autoSaveTimer = null;
+let notesSelectMode = false;
+let notesSelected = new Set();
+
+function toggleNotesSelect() {
+  notesSelectMode = !notesSelectMode;
+  notesSelected.clear();
+  renderNotes();
+  // بعد renderNotes تُنشئ الأزرار نبحث عنها
+  setTimeout(() => {
+    const btnDelete = document.getElementById('btnDeleteNotes');
+    const btnCancel = document.getElementById('btnCancelNotesSelect');
+    if (btnDelete) btnDelete.style.display = notesSelectMode ? 'block' : 'none';
+    if (btnCancel) btnCancel.style.display = notesSelectMode ? 'block' : 'none';
+  }, 10);
+}
+
+function cancelNotesSelect() {
+  notesSelectMode = false;
+  notesSelected.clear();
+  renderNotes();
+  setTimeout(() => {
+    const btnDelete = document.getElementById('btnDeleteNotes');
+    const btnCancel = document.getElementById('btnCancelNotesSelect');
+    if (btnDelete) btnDelete.style.display = 'none';
+    if (btnCancel) btnCancel.style.display = 'none';
+  }, 10);
+}
+
+function toggleNoteSelect(id) {
+  if (notesSelected.has(id)) notesSelected.delete(id);
+  else notesSelected.add(id);
+  renderNotes();
+}
+
+function deleteSelectedNotes() {
+  if (notesSelected.size === 0) return;
+  const count = notesSelected.size;
+  if (!confirm(currentLang === 'ar' ? `حذف ${count} مذكرة؟` : `Delete ${count} notes?`)) return;
+  notes = notes.filter(n => !notesSelected.has(n.id));
+  saveNotes();
+  cancelNotesSelect();
+  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} مذكرة` : `🗑 ${count} notes deleted`);
+}
 
 function loadNotes() {
   try {
@@ -2541,12 +2637,34 @@ function renderNotes(filter = '') {
     return;
   }
 
-  container.innerHTML = filtered.map(note => `
-    <div onclick="openNote(${note.id})" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;"
-         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+  container.innerHTML = `
+    <div style="display:flex;justify-content:flex-start;margin-bottom:12px;gap:8px">
+      <button onclick="toggleNotesSelect()" id="btnNotesSelect"
+              style="background:${notesSelectMode ? 'var(--primary)' : 'var(--bg3)'};border:1px solid var(--border);padding:6px 14px;border-radius:8px;color:${notesSelectMode ? '#fff' : 'var(--text2)'};font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+        ☑ ${currentLang === 'ar' ? 'تحديد' : 'Select'}
+      </button>
+      <button id="btnDeleteNotes" onclick="deleteSelectedNotes()"
+              style="display:${notesSelectMode ? 'block' : 'none'};background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+        🗑 ${currentLang === 'ar' ? 'حذف المحدد' : 'Delete Selected'}
+      </button>
+      <button id="btnCancelNotesSelect" onclick="cancelNotesSelect()"
+              style="display:${notesSelectMode ? 'block' : 'none'};background:var(--bg3);border:1px solid var(--border);padding:6px 14px;border-radius:8px;color:var(--text2);font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+        ✕
+      </button>
+    </div>
+  ` + filtered.map(note => `
+    <div onclick="${notesSelectMode ? `toggleNoteSelect(${note.id})` : `openNote(${note.id})`}" 
+         style="background:var(--card);border:2px solid ${notesSelected.has(note.id) ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;
+                ${notesSelected.has(note.id) ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div onclick="event.stopPropagation();deleteNote(${note.id})" 
-             style="color:var(--error);font-size:16px;cursor:pointer;padding:4px">🗑</div>
+        ${notesSelectMode ? `
+          <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);
+                      background:${notesSelected.has(note.id) ? 'var(--primary)' : 'transparent'};
+                      display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">
+            ${notesSelected.has(note.id) ? '✓' : ''}
+          </div>` : `
+          <div onclick="event.stopPropagation();deleteNote(${note.id})" 
+               style="color:var(--error);font-size:16px;cursor:pointer;padding:4px">🗑</div>`}
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
       </div>
       <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">

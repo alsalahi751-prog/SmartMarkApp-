@@ -1094,7 +1094,7 @@ body::before {
       <div class="profile-card">
         <div class="profile-avatar">👤</div>
         <div class="profile-info">
-          <div class="profile-name" id="profileName">قاسم المستخدم</div>
+          <div class="profile-name" id="profileName">مستخدم</div>
           <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d787e687f4d7e606c7f79606c7f66236c7d7d">[email&#160;protected]</a></div>
           <div class="profile-badge">✨ Pro</div>
         </div>
@@ -1435,6 +1435,12 @@ function showApp() {
     document.getElementById('sd_lock').textContent = currentLang === 'ar' ? 'القفل مفعّل ✓' : 'Lock enabled ✓';
   }
 
+  // رسالة ترحيب
+  setTimeout(() => {
+    const welcomeMsg = currentLang === 'ar' ? 'أهلاً وسهلاً يا مستخدم! 👋' : 'Welcome, User! 👋';
+    showToast(welcomeMsg, 'var(--primary)');
+  }, 500);
+
   // تطبيق اللغة المحفوظة
   const savedLang = localStorage.getItem('sm_lang') || 'ar';
   currentLang = savedLang;
@@ -1662,6 +1668,11 @@ function moveSelectedSaved() {
 }
 
 function renderFolders() {
+  // إظهار أزرار الرئيسية عند الرجوع
+  const btnSel = document.getElementById('btnSelectFolders');
+  const btnNew = document.getElementById('btnNewFolder');
+  if (btnSel) btnSel.style.display = '';
+  if (btnNew) btnNew.style.display = '';
   const grid = document.getElementById('folders-grid');
   const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
   grid.innerHTML = folders.map(f => `
@@ -2028,6 +2039,9 @@ function openFolder(folderId) {
   const folder = folders.find(f => f.id === folderId);
   if (!folder) return;
   switchScreen('folders');
+  // إخفاء أزرار الرئيسية عند فتح مجلد
+  document.getElementById('btnSelectFolders').style.display = 'none';
+  document.getElementById('btnNewFolder').style.display = 'none';
   
   const grid = document.getElementById('folders-grid');
   const folderItems = items.filter(i => i.folderId === folderId);
@@ -2304,7 +2318,7 @@ function applyTranslations(lang) {
 
   // اسم المستخدم
   const profileName = document.getElementById('profileName');
-  if (profileName) profileName.textContent = lang === 'ar' ? 'قاسم المستخدم' : 'User';
+  if (profileName) profileName.textContent = lang === 'ar' ? 'مستخدم' : 'User';
 
   // قيّم التطبيق
   const rateApp = document.getElementById('rateApp');
@@ -2618,7 +2632,25 @@ function loadNotes() {
 }
 
 function saveNotes() {
-  try { localStorage.setItem('sm_notes', JSON.stringify(notes)); } catch(e) {}
+  try {
+    // تحديد حجم المذكرة - نحذف المحتوى الكبير جداً
+    const safeNotes = notes.map(n => ({
+      ...n,
+      content: n.content ? n.content.substring(0, 50000) : '',
+      contentText: n.contentText ? n.contentText.substring(0, 5000) : ''
+    }));
+    localStorage.setItem('sm_notes', JSON.stringify(safeNotes));
+  } catch(e) {
+    // إذا فشل التخزين نحاول تقليل الحجم أكثر
+    try {
+      const minNotes = notes.map(n => ({
+        id: n.id, title: n.title, date: n.date,
+        content: n.content ? n.content.substring(0, 10000) : '',
+        contentText: n.contentText ? n.contentText.substring(0, 1000) : ''
+      }));
+      localStorage.setItem('sm_notes', JSON.stringify(minNotes));
+    } catch(e2) {}
+  }
 }
 
 function renderNotes(filter = '') {
@@ -2715,11 +2747,16 @@ function saveCurrentNote() {
   if (!title && !noteText) return;
 
   const existing = notes.findIndex(n => n.id === currentNoteId);
+  // تنظيف HTML من السكريبت والمحتوى الخطر
+  const rawHtml = noteEl.innerHTML;
+  const safeHtml = rawHtml.replace(/<script[^>]*>.*?<\/script>/gi, '')
+                          .replace(/<style[^>]*>.*?<\/style>/gi, '')
+                          .substring(0, 50000);
   const noteData = {
     id: currentNoteId,
     title,
-    content: noteEl.innerHTML,
-    contentText: noteEl.innerText,
+    content: safeHtml,
+    contentText: noteEl.innerText.substring(0, 5000),
     date: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')
   };
 

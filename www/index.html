@@ -1040,7 +1040,11 @@ body::before {
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="notesTitle">📝 مذكراتي</h2>
         <div style="display:flex;gap:10px;align-items:center">
-          <div class="see-all" onclick="openTrash()" style="color:var(--text3)" id="btnTrash">🗑</div>
+          <div onclick="openTrash()" id="btnTrash"
+               style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);padding:6px 12px;border-radius:10px;color:var(--text2);font-size:12px;font-weight:700">
+            <span style="font-size:16px">♻️</span>
+            <span id="trashBtnText">سلة المحذوفات</span>
+          </div>
           <div class="see-all" onclick="addNote()" id="btnAddNote">+ جديد</div>
         </div>
       </div>
@@ -1104,10 +1108,12 @@ body::before {
                   style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:17px;font-weight:700;cursor:pointer">A+</button>
           <button onmousedown="event.preventDefault();undoNote()" title="تراجع"
                   style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:16px;cursor:pointer">↩</button>
-          <input type="color" id="textColorPicker" value="#6366f1"
+          <button onmousedown="event.preventDefault();document.getElementById('hiddenColorPicker').click()" 
+                  title="لون النص"
+                  style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:18px;cursor:pointer">🎨</button>
+          <input type="color" id="hiddenColorPicker" value="#6366f1"
                  onchange="changeTextColor(this.value)"
-                 title="${currentLang === 'ar' ? 'لون النص' : 'Text color'}"
-                 style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;padding:2px"/>
+                 style="display:none"/>
         </div>
         <span id="noteAutoSave" style="font-size:11px;color:var(--text3)">يتم الحفظ تلقائياً ✓</span>
       </div>
@@ -2385,6 +2391,8 @@ function applyTranslations(lang) {
   if (notesSearch) notesSearch.placeholder = lang === 'ar' ? 'ابحث في المذكرات...' : 'Search notes...';
   const navNotesLabel = document.getElementById('nav-notes-label');
   if (navNotesLabel) navNotesLabel.textContent = lang === 'ar' ? 'مذكرات' : 'Notes';
+  const trashBtnText = document.getElementById('trashBtnText');
+  if (trashBtnText) trashBtnText.textContent = lang === 'ar' ? 'سلة المحذوفات' : 'Trash';
   const navSettingsLabel = document.getElementById('nav-settings-label');
   if (navSettingsLabel) navSettingsLabel.textContent = lang === 'ar' ? 'الإعدادات' : 'Settings';
   const btnSaveNote = document.getElementById('btnSaveNote');
@@ -2632,14 +2640,11 @@ let noteOptionsId = null;
 
 function showNoteOptions(id) {
   noteOptionsId = id;
-  const note = notes.find(n => n.id === id);
-  if (note) {
-    document.getElementById('noteOptionsTitle').textContent = note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled');
-  }
-  document.getElementById('noteOptionsOverlay').style.display = 'block';
-  const sheet = document.getElementById('noteOptionsSheet');
-  sheet.style.display = 'block';
-  setTimeout(() => sheet.style.transform = 'translateY(0)', 10);
+  // تفعيل وضع التحديد وتحديد هذه المذكرة
+  notesSelectMode = true;
+  notesSelected.clear();
+  notesSelected.add(id);
+  renderNotes();
 }
 
 function closeNoteOptions() {
@@ -2754,12 +2759,22 @@ function cancelNotesSelect() {
   notesSelectMode = false;
   notesSelected.clear();
   renderNotes();
-  setTimeout(() => {
-    const btnDelete = document.getElementById('btnDeleteNotes');
-    const btnCancel = document.getElementById('btnCancelNotesSelect');
-    if (btnDelete) btnDelete.style.display = 'none';
-    if (btnCancel) btnCancel.style.display = 'none';
-  }, 10);
+}
+
+function confirmDeleteSelected() {
+  if (notesSelected.size === 0) return;
+  const count = notesSelected.size;
+  if (!confirm(currentLang === 'ar' ? `حذف ${count} مذكرة؟` : `Delete ${count} notes?`)) return;
+  const toDelete = [...notesSelected];
+  toDelete.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) deletedNotes.unshift({...note, deletedAt: new Date().toLocaleDateString()});
+  });
+  notes = notes.filter(n => !notesSelected.has(n.id));
+  saveNotes();
+  saveDeletedNotes();
+  cancelNotesSelect();
+  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} مذكرة` : `🗑 ${count} notes deleted`);
 }
 
 function toggleNoteSelect(id) {
@@ -2825,14 +2840,20 @@ function renderNotes(filter = '') {
 
   container.innerHTML = `
   ` + filtered.map(note => `
-    <div onclick="openNote(${note.id})"
+    <div onclick="${notesSelectMode ? `toggleNoteSelect(${note.id})` : `openNote(${note.id})`}"
          oncontextmenu="event.preventDefault();showNoteOptions(${note.id})"
          id="note-card-${note.id}"
-         style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;"
-         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+         style="background:var(--card);border:2px solid ${notesSelected.has(note.id) ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;
+                ${notesSelected.has(note.id) ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div onclick="event.stopPropagation();showNoteOptions(${note.id})" 
-             style="color:var(--text3);font-size:18px;cursor:pointer;padding:4px">⋮</div>
+        ${notesSelectMode ? `
+          <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
+                      background:${notesSelected.has(note.id) ? 'var(--primary)' : 'transparent'};
+                      display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0">
+            ${notesSelected.has(note.id) ? '✓' : ''}
+          </div>` : `
+          <div onclick="event.stopPropagation();showNoteOptions(${note.id})" 
+               style="color:var(--text3);font-size:18px;cursor:pointer;padding:4px">⋮</div>`}
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
       </div>
       <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">

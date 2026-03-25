@@ -753,6 +753,30 @@ body::before {
   pointer-events: none;
 }
 
+.action-bar {
+  display: none;
+  padding: 10px 16px;
+  background: var(--primary);
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  gap: 8px;
+  animation: fadeIn 0.2s ease;
+}
+.action-bar.show { display: flex; }
+.action-bar-count { color: #fff; font-weight: 800; font-size: 14px; white-space: nowrap; }
+.action-bar-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ab-btn {
+  border: none; padding: 6px 12px; border-radius: 8px;
+  font-family: system-ui, Tahoma, Arial, sans-serif;
+  font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.ab-btn-delete { background: var(--error); color: #fff; }
+.ab-btn-delete-all { background: rgba(239,68,68,0.3); color: #fff; border: 1px solid var(--error); }
+.ab-btn-move { background: rgba(255,255,255,0.15); color: #fff; }
+.ab-btn-select-all { background: rgba(255,255,255,0.15); color: #fff; }
+.ab-btn-cancel { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -996,18 +1020,13 @@ body::before {
 
       </div>
 
-      <!-- شريط أدوات التحديد -->
-      <div id="savedSelectionBar" style="display:none;padding:10px 20px;background:var(--primary);align-items:center;justify-content:space-between;flex-direction:row-reverse;margin-top:8px">
-        <div style="color:#fff;font-weight:700;font-size:14px" id="savedSelectionCount">0 محدد</div>
-        <div style="display:flex;gap:8px">
-          <button onclick="deleteSelectedSaved()" 
-                  style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer" 
-                  id="btnDeleteSaved">🗑 حذف</button>
-          <button onclick="moveSelectedSaved()" 
-                  style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer"
-                  id="btnMoveSaved">📂 نقل</button>
-          <button onclick="cancelSavedSelect()" 
-                  style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✕</button>
+      <div class="action-bar" id="savedActionBar">
+        <div class="action-bar-count" id="savedSelCount">0</div>
+        <div class="action-bar-btns">
+          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('saved')" id="ab_saved_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-move" onclick="moveSelectedSaved()" id="ab_saved_move">📂 نقل</button>
+          <button class="ab-btn ab-btn-delete" onclick="deleteSelectedSaved()" id="ab_saved_del">🗑 حذف</button>
+          <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('saved')" id="ab_saved_cancel">✕</button>
         </div>
       </div>
 
@@ -1024,12 +1043,12 @@ body::before {
           <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
         </div>
       </div>
-      <!-- شريط تحديد المجلدات -->
-      <div id="foldersSelectionBar" style="display:none;padding:10px 20px;background:var(--primary);align-items:center;justify-content:space-between;flex-direction:row-reverse">
-        <div style="color:#fff;font-weight:700;font-size:14px" id="foldersSelectionCount">0 محدد</div>
-        <div style="display:flex;gap:8px">
-          <button onclick="deleteSelectedFolders()" style="background:var(--error);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">🗑 حذف</button>
-          <button onclick="cancelFoldersSelect()" style="background:rgba(255,255,255,0.2);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✕</button>
+      <div class="action-bar" id="foldersActionBar">
+        <div class="action-bar-count" id="foldersSelCount">0</div>
+        <div class="action-bar-btns">
+          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('folders')" id="ab_folders_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-delete" onclick="deleteSelectedFolders()" id="ab_folders_del">🗑 حذف</button>
+          <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('folders')" id="ab_folders_cancel">✕</button>
         </div>
       </div>
       <div class="folders-grid" id="folders-grid"></div>
@@ -1056,6 +1075,15 @@ body::before {
                oninput="filterNotes()" style="flex:1;background:none;border:none;outline:none;color:var(--text1);font-family:system-ui,Tahoma,Arial,sans-serif;font-size:14px;text-align:right"/>
       </div>
 
+      <div class="action-bar" id="notesActionBar">
+        <div class="action-bar-count" id="notesSelCount">0</div>
+        <div class="action-bar-btns">
+          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('notes')" id="ab_notes_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-delete-all" onclick="confirmDeleteAllNotes()" id="ab_notes_delall">🗑 الكل</button>
+          <button class="ab-btn ab-btn-delete" onclick="deleteSelectedNotes()" id="ab_notes_del">🗑 حذف</button>
+          <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('notes')" id="ab_notes_cancel">✕</button>
+        </div>
+      </div>
       <!-- قائمة المذكرات -->
       <div id="notesList" style="padding:16px 20px"></div>
     </div>
@@ -1220,6 +1248,27 @@ body::before {
             <div class="setting-label" id="sl_changepin">تغيير رمز PIN</div>
           </div>
           <div style="color:var(--primary);cursor:pointer;font-weight:700;font-size:13px" onclick="setupPin(true)" id="btn_changepin">تغيير</div>
+        </div>
+      </div>
+
+      <div class="settings-section-title">📤 البيانات</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:#0a2a1a">📤</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_export">تصدير البيانات</div>
+            <div class="setting-desc" id="sd_export">حفظ نسخة احتياطية</div>
+          </div>
+          <button onclick="exportData()" style="background:var(--success);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer" id="btn_export">تصدير</button>
+        </div>
+        <div class="setting-row" style="border-bottom:none">
+          <div class="setting-icon" style="background:#0a1a2a">📥</div>
+          <div class="setting-info">
+            <div class="setting-label" id="sl_import">استيراد البيانات</div>
+            <div class="setting-desc" id="sd_import">استعادة نسخة احتياطية</div>
+          </div>
+          <button onclick="document.getElementById('importFile').click()" style="background:var(--primary);border:none;padding:6px 14px;border-radius:8px;color:#fff;font-family:system-ui,Tahoma,Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer" id="btn_import">استيراد</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"/>
         </div>
       </div>
 
@@ -1407,6 +1456,100 @@ let folders = [
 // ==========================================
 // SPLASH → ONBOARDING → APP
 // ==========================================
+// ==========================================
+// SELECTION MANAGER (SM) - نظام تحديد موحد
+// ==========================================
+const SM = {
+  state: {
+    saved:   { active: false, selected: new Set() },
+    folders: { active: false, selected: new Set() },
+    notes:   { active: false, selected: new Set() },
+  },
+
+  // بدء وضع التحديد
+  start(section, id) {
+    // إلغاء التحديد في الأقسام الأخرى
+    Object.keys(this.state).forEach(s => {
+      if (s !== section) this.cancel(s);
+    });
+    const s = this.state[section];
+    s.active = true;
+    s.selected.add(id);
+    this._updateBar(section);
+    this._rerender(section);
+  },
+
+  // تبديل تحديد عنصر
+  toggle(section, id) {
+    const s = this.state[section];
+    if (!s.active) return;
+    if (s.selected.has(id)) s.selected.delete(id);
+    else s.selected.add(id);
+    this._updateBar(section);
+    this._rerender(section);
+  },
+
+  // تحديد الكل
+  selectAll(section) {
+    const s = this.state[section];
+    let all = [];
+    if (section === 'saved') all = items.map(i => i.id);
+    else if (section === 'folders') all = folders.map(f => f.id);
+    else if (section === 'notes') all = notes.map(n => n.id);
+    all.forEach(id => s.selected.add(id));
+    this._updateBar(section);
+    this._rerender(section);
+  },
+
+  // إلغاء التحديد والخروج
+  cancel(section) {
+    const s = this.state[section];
+    s.active = false;
+    s.selected.clear();
+    this._updateBar(section);
+    this._rerender(section);
+  },
+
+  // تحديث شريط الإجراءات
+  _updateBar(section) {
+    const s = this.state[section];
+    const barId = section + 'ActionBar';
+    const countId = section + 'SelCount';
+    const bar = document.getElementById(barId);
+    const countEl = document.getElementById(countId);
+    if (bar) bar.classList.toggle('show', s.active);
+    if (countEl) {
+      const count = s.selected.size;
+      countEl.textContent = count + ' ' + (currentLang === 'ar' ? 'محدد' : 'selected');
+    }
+  },
+
+  // إعادة رسم القسم
+  _rerender(section) {
+    if (section === 'saved') renderSavedList();
+    else if (section === 'folders') renderFolders();
+    else if (section === 'notes') renderNotes();
+  },
+
+  // هل العنصر محدد؟
+  isSelected(section, id) {
+    return this.state[section].selected.has(id);
+  },
+
+  // هل وضع التحديد نشط؟
+  isActive(section) {
+    return this.state[section].active;
+  },
+
+  // الحصول على المحددين
+  getSelected(section) {
+    return new Set(this.state[section].selected);
+  }
+};
+
+// إلغاء التحديد عند تغيير الشاشة
+const _origSwitchScreen = typeof switchScreen === 'function' ? switchScreen : null;
+
 function clearStorage() {
   const msg = currentLang === 'ar' 
     ? 'سيتم مسح ذاكرة التخزين المؤقت فقط\nلن تُحذف بياناتك\nهل تريد المتابعة؟'
@@ -1423,6 +1566,50 @@ function clearStorage() {
   if (sdClear) sdClear.textContent = currentLang === 'ar' ? '✓ تم المسح' : '✓ Cleared';
   
   showToast(currentLang === 'ar' ? '✓ تم مسح ذاكرة التخزين' : '✓ Cache cleared', 'var(--success)');
+}
+
+function exportData() {
+  const data = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    items: JSON.parse(localStorage.getItem('sm_items') || '[]'),
+    folders: JSON.parse(localStorage.getItem('sm_folders') || '[]'),
+    notes: JSON.parse(localStorage.getItem('sm_notes') || '[]'),
+    settings: {
+      lang: localStorage.getItem('sm_lang') || 'ar',
+      theme: localStorage.getItem('sm_theme') || 'dark',
+    }
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'SmartMark_Backup_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(currentLang === 'ar' ? '✓ تم التصدير' : '✓ Exported', 'var(--success)');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.version) throw new Error('Invalid file');
+      if (!confirm(currentLang === 'ar' ? 'سيتم استبدال البيانات الحالية. هل تريد المتابعة؟' : 'This will replace current data. Continue?')) return;
+      if (data.items) localStorage.setItem('sm_items', JSON.stringify(data.items));
+      if (data.folders) localStorage.setItem('sm_folders', JSON.stringify(data.folders));
+      if (data.notes) localStorage.setItem('sm_notes', JSON.stringify(data.notes));
+      showToast(currentLang === 'ar' ? '✓ تم الاستيراد - أعد فتح التطبيق' : '✓ Imported - Reload app', 'var(--success)');
+      setTimeout(() => location.reload(), 2000);
+    } catch(err) {
+      showToast(currentLang === 'ar' ? '❌ ملف غير صالح' : '❌ Invalid file', 'var(--error)');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 window.onload = () => {
@@ -1521,6 +1708,8 @@ function finishOnboarding() {
 // SCREENS
 // ==========================================
 function switchScreen(name) {
+  // إلغاء التحديد في القسم الحالي
+  ['saved','folders','notes'].forEach(s => SM.cancel(s));
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
@@ -1599,19 +1788,21 @@ let savedSelectedItems = new Set();
 function renderSavedList() {
   const container = document.getElementById('saved-list');
   const p = PLATFORMS;
-  container.innerHTML = items.map(item => `
+  const selActive = SM.isActive('saved');
+  container.innerHTML = items.map(item => {
+    const isSel = SM.isSelected('saved', item.id);
+    return `
     <div class="list-item" 
-         onclick="${savedSelectMode ? `toggleSavedItem(${item.id})` : `openDetail(${item.id})`}" oncontextmenu="event.preventDefault();startSavedSelect(${item.id})"
-         style="${savedSelectedItems.has(item.id) ? 'background:var(--primary-glow);border-right:3px solid var(--primary)' : ''}">
-      ${savedSelectMode ? `
+         onclick="${selActive ? `SM.toggle('saved',${item.id})` : `openDetail(${item.id})`}"
+         oncontextmenu="event.preventDefault();SM.start('saved',${item.id})"
+         style="${isSel ? 'background:var(--primary-glow);border-right:3px solid var(--primary)' : ''}">
+      ${selActive ? `
         <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
-                    background:${savedSelectedItems.has(item.id) ? 'var(--primary)' : 'transparent'};
+                    background:${isSel ? 'var(--primary)' : 'transparent'};
                     display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0">
-          ${savedSelectedItems.has(item.id) ? '✓' : ''}
+          ${isSel ? '✓' : ''}
         </div>` : ''}
-      <div class="list-thumb ${p[item.platform].class}">
-        <span>${item.emoji}</span>
-      </div>
+      <div class="list-thumb ${p[item.platform].class}"><span>${item.emoji}</span></div>
       <div class="list-info">
         <div class="list-title">${item.title}</div>
         <div class="list-sub">${p[item.platform].icon} ${item.platform === 'other' ? (currentLang === 'ar' ? 'رابط' : 'Link') : item.platform} · ${item.date}</div>
@@ -1619,8 +1810,8 @@ function renderSavedList() {
       <div class="list-badge" style="background:${
         item.type==='video'?'#7c3aed':item.type==='image'?'#0891b2':'#065f46'
       }">${item.type==='video'?'🎬':item.type==='image'?'🖼':'🔗'}</div>
-    </div>
-  `).join('');
+    </div>`; 
+  }).join('');
 }
 
 function startSavedSelect(id) {
@@ -1668,41 +1859,29 @@ function cancelSavedSelect() {
 }
 
 function deleteSelectedSaved() {
-  if (savedSelectedItems.size === 0) {
-    showToast(currentLang === 'ar' ? '⚠️ لم تحدد أي عنصر' : '⚠️ No items selected', 'var(--error)');
-    return;
-  }
-  const count = savedSelectedItems.size;
-  if (!confirm(currentLang === 'ar' ? `حذف ${count} عنصر؟` : `Delete ${count} items?`)) return;
-  const toDelete = new Set(savedSelectedItems);
-  items = items.filter(i => !toDelete.has(i.id));
+  const sel = SM.getSelected('saved');
+  if (sel.size === 0) { showToast(currentLang === 'ar' ? '⚠️ لم تحدد أي عنصر' : '⚠️ No items selected', 'var(--error)'); return; }
+  if (!confirm(currentLang === 'ar' ? `حذف ${sel.size} عنصر؟` : `Delete ${sel.size} items?`)) return;
+  items = items.filter(i => !sel.has(i.id));
   saveItems();
-  cancelSavedSelect();
-  renderSavedList();
+  SM.cancel('saved');
   renderItems();
-  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} عنصر` : `🗑 ${count} items deleted`);
+  showToast(currentLang === 'ar' ? `🗑 تم الحذف` : `🗑 Deleted`);
 }
 
 function moveSelectedSaved() {
-  if (savedSelectedItems.size === 0) return;
-  if (folders.length === 0) {
-    showToast(currentLang === 'ar' ? '❌ لا توجد مجلدات' : '❌ No folders', 'var(--error)');
-    return;
-  }
+  const sel = SM.getSelected('saved');
+  if (sel.size === 0) return;
+  if (folders.length === 0) { showToast(currentLang === 'ar' ? '❌ لا توجد مجلدات' : '❌ No folders', 'var(--error)'); return; }
   const folderList = folders.map((f, i) => `${i+1}. ${f.icon} ${f.name}`).join('\n');
   const input = prompt((currentLang === 'ar' ? 'اختر رقم المجلد:\n' : 'Choose folder number:\n') + folderList);
   if (!input) return;
   const idx = parseInt(input) - 1;
-  if (idx < 0 || idx >= folders.length) {
-    showToast(currentLang === 'ar' ? '❌ رقم غير صحيح' : '❌ Invalid number', 'var(--error)');
-    return;
-  }
+  if (idx < 0 || idx >= folders.length) { showToast(currentLang === 'ar' ? '❌ رقم غير صحيح' : '❌ Invalid', 'var(--error)'); return; }
   const folder = folders[idx];
-  items.forEach(i => {
-    if (savedSelectedItems.has(i.id)) i.folderId = folder.id;
-  });
+  items.forEach(i => { if (sel.has(i.id)) i.folderId = folder.id; });
   saveItems();
-  cancelSavedSelect();
+  SM.cancel('saved');
   renderSavedList();
   showToast(currentLang === 'ar' ? `📂 تم النقل إلى ${folder.name}` : `📂 Moved to ${folder.name}`);
 }
@@ -1715,16 +1894,21 @@ function renderFolders() {
   if (btnNew) btnNew.style.display = '';
   const grid = document.getElementById('folders-grid');
   const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
-  grid.innerHTML = folders.map(f => `
-    <div class="folder-card" style="--folder-color:${f.color};${foldersSelected.has(f.id) ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}" 
-         onclick="${foldersSelectMode ? `toggleFolderSelect(${f.id}, event)` : `openFolder(${f.id})`}">
-      ${foldersSelectMode ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${foldersSelected.has(f.id) ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">${foldersSelected.has(f.id) ? '✓' : ''}</div>` : ''}
+  const fSelActive = SM.isActive('folders');
+  grid.innerHTML = folders.map(f => {
+    const fSel = SM.isSelected('folders', f.id);
+    return `
+    <div class="folder-card" style="--folder-color:${f.color};${fSel ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}" 
+         onclick="${fSelActive ? `SM.toggle('folders',${f.id})` : `openFolder(${f.id})`}"
+         oncontextmenu="event.preventDefault();SM.start('folders',${f.id})"
+         id="fc-${f.id}">
+      ${fSelActive ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${fSel ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">${fSel ? '✓' : ''}</div>` : ''}
       <div class="folder-icon">${f.icon}</div>
       <div class="folder-name">${f.name}</div>
       <div class="folder-count">${items.filter(i=>i.folderId===f.id).length} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
       <div class="folder-bar" style="background:${f.color};width:${Math.min(100,items.filter(i=>i.folderId===f.id).length*20)}%"></div>
     </div>
-  `).join('') + `
+  `; }).join('') + `
     <div class="new-folder-card" onclick="createFolder()">
       <span>➕</span>
       <p>${newFolderText}</p>
@@ -2052,13 +2236,13 @@ function toggleFolderSelect(id, e) {
 }
 
 function deleteSelectedFolders() {
-  if (foldersSelected.size === 0) return;
-  const count = foldersSelected.size;
-  if (!confirm(currentLang === 'ar' ? `حذف ${count} مجلد؟` : `Delete ${count} folders?`)) return;
-  folders = folders.filter(f => !foldersSelected.has(f.id));
+  const sel = SM.getSelected('folders');
+  if (sel.size === 0) return;
+  if (!confirm(currentLang === 'ar' ? `حذف ${sel.size} مجلد؟` : `Delete ${sel.size} folders?`)) return;
+  folders = folders.filter(f => !sel.has(f.id));
   saveFolders();
-  cancelFoldersSelect();
-  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} مجلد` : `🗑 ${count} folders deleted`);
+  SM.cancel('folders');
+  showToast(currentLang === 'ar' ? `🗑 تم الحذف` : `🗑 Deleted`);
 }
 
 function saveFolders() {
@@ -2391,6 +2575,30 @@ function applyTranslations(lang) {
   if (notesSearch) notesSearch.placeholder = lang === 'ar' ? 'ابحث في المذكرات...' : 'Search notes...';
   const navNotesLabel = document.getElementById('nav-notes-label');
   if (navNotesLabel) navNotesLabel.textContent = lang === 'ar' ? 'مذكرات' : 'Notes';
+  // تحديد الكل والإجراءات
+  const ids = {
+    'ab_saved_selall': {ar:'تحديد الكل', en:'Select All'},
+    'ab_saved_move': {ar:'📂 نقل', en:'📂 Move'},
+    'ab_saved_del': {ar:'🗑 حذف', en:'🗑 Delete'},
+    'ab_saved_cancel': {ar:'✕', en:'✕'},
+    'ab_folders_selall': {ar:'تحديد الكل', en:'Select All'},
+    'ab_folders_del': {ar:'🗑 حذف', en:'🗑 Delete'},
+    'ab_folders_cancel': {ar:'✕', en:'✕'},
+    'ab_notes_selall': {ar:'تحديد الكل', en:'Select All'},
+    'ab_notes_delall': {ar:'🗑 الكل', en:'🗑 All'},
+    'ab_notes_del': {ar:'🗑 حذف', en:'🗑 Delete'},
+    'ab_notes_cancel': {ar:'✕', en:'✕'},
+    'sl_export': {ar:'تصدير البيانات', en:'Export Data'},
+    'sd_export': {ar:'حفظ نسخة احتياطية', en:'Save backup'},
+    'sl_import': {ar:'استيراد البيانات', en:'Import Data'},
+    'sd_import': {ar:'استعادة نسخة احتياطية', en:'Restore backup'},
+    'btn_export': {ar:'تصدير', en:'Export'},
+    'btn_import': {ar:'استيراد', en:'Import'},
+  };
+  Object.keys(ids).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = ids[id][lang] || ids[id]['ar'];
+  });
   const trashBtnText = document.getElementById('trashBtnText');
   if (trashBtnText) trashBtnText.textContent = lang === 'ar' ? 'سلة المحذوفات' : 'Trash';
   const navSettingsLabel = document.getElementById('nav-settings-label');
@@ -2495,6 +2703,33 @@ document.addEventListener('touchstart', (e) => {
 }, {passive: true});
 document.addEventListener('touchend', () => clearTimeout(noteLongPressTimer), {passive: true});
 document.addEventListener('touchmove', () => clearTimeout(noteLongPressTimer), {passive: true});
+
+// Long Press موحد
+let _lpTimer = null;
+document.addEventListener('touchstart', e => {
+  // مذكرات
+  const nc = e.target.closest('[id^="note-card-"]');
+  if (nc) { _lpTimer = setTimeout(() => SM.start('notes', parseInt(nc.id.replace('note-card-',''))), 600); return; }
+  // مجلدات
+  const fc = e.target.closest('[id^="fc-"]');
+  if (fc) { _lpTimer = setTimeout(() => SM.start('folders', parseInt(fc.id.replace('fc-',''))), 600); return; }
+  // محفوظات
+  const li = e.target.closest('.list-item');
+  if (li) {
+    const onc = li.getAttribute('onclick') || '';
+    const m = onc.match(/openDetail\((\d+)\)/);
+    if (m) { _lpTimer = setTimeout(() => SM.start('saved', parseInt(m[1])), 600); }
+  }
+}, {passive: true});
+document.addEventListener('touchend', () => clearTimeout(_lpTimer), {passive: true});
+document.addEventListener('touchmove', () => clearTimeout(_lpTimer), {passive: true});
+
+// إلغاء التحديد بالضغط خارج العناصر
+document.addEventListener('click', e => {
+  if (SM.isActive('saved') && !e.target.closest('#saved-list') && !e.target.closest('#savedActionBar')) SM.cancel('saved');
+  if (SM.isActive('folders') && !e.target.closest('#folders-grid') && !e.target.closest('#foldersActionBar')) SM.cancel('folders');
+  if (SM.isActive('notes') && !e.target.closest('#notesList') && !e.target.closest('#notesActionBar')) SM.cancel('notes');
+});
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeDetail(); hideShareSheet(); closeEdit(); }

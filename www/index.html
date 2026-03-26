@@ -2982,26 +2982,12 @@ function permanentDelete(idx) {
   saveDeletedNotes();
   renderTrash();
 }
-let notesSelectMode = false;
-let notesSelected = new Set();
+// notesSelectMode/notesSelected محذوفة - نستخدم SM
 
-function toggleNotesSelect() {
-  notesSelectMode = !notesSelectMode;
-  notesSelected.clear();
-  renderNotes();
-  // بعد renderNotes تُنشئ الأزرار نبحث عنها
-  setTimeout(() => {
-    const btnDelete = document.getElementById('btnDeleteNotes');
-    const btnCancel = document.getElementById('btnCancelNotesSelect');
-    if (btnDelete) btnDelete.style.display = notesSelectMode ? 'block' : 'none';
-    if (btnCancel) btnCancel.style.display = notesSelectMode ? 'block' : 'none';
-  }, 10);
-}
+// toggleNotesSelect محذوفة
 
 function cancelNotesSelect() {
-  notesSelectMode = false;
-  notesSelected.clear();
-  renderNotes();
+  SM.cancel('notes');
 }
 
 // confirmDeleteSelected - replaced by deleteSelectedNotes
@@ -3037,15 +3023,7 @@ function toggleSelectAllNotes() {
   }, 10);
 }
 
-function deleteSelectedNotes() {
-  if (notesSelected.size === 0) return;
-  const count = notesSelected.size;
-  if (!confirm(currentLang === 'ar' ? `حذف ${count} مذكرة؟` : `Delete ${count} notes?`)) return;
-  notes = notes.filter(n => !notesSelected.has(n.id));
-  saveNotes();
-  cancelNotesSelect();
-  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} مذكرة` : `🗑 ${count} notes deleted`);
-}
+// deleteSelectedNotes القديمة محذوفة - استخدم النسخة الجديدة أدناه
 
 function loadNotes() {
   try {

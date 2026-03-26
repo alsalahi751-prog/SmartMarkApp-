@@ -1492,6 +1492,7 @@ const SM = {
   // تحديد الكل
   selectAll(section) {
     const s = this.state[section];
+    s.active = true;  // تأكد أن وضع التحديد نشط
     let all = [];
     if (section === 'saved') all = items.map(i => i.id);
     else if (section === 'folders') all = folders.map(f => f.id);
@@ -3039,7 +3040,7 @@ function saveNotes() {
 function renderNotes(filter = '') {
   const container = document.getElementById('notesList');
   const filtered = notes.filter(n => 
-    !filter || n.title.includes(filter) || n.content.includes(filter)
+    !filter || n.title.includes(filter) || (n.content || '').includes(filter)
   );
 
   if (filtered.length === 0) {
@@ -3052,30 +3053,36 @@ function renderNotes(filter = '') {
     return;
   }
 
-  container.innerHTML = `
-  ` + filtered.map(note => `
-    <div onclick="${notesSelectMode ? `toggleNoteSelect(${note.id})` : `openNote(${note.id})`}"
-         oncontextmenu="event.preventDefault();showNoteOptions(${note.id})"
+  const selActive = SM.isActive('notes');
+  container.innerHTML = filtered.map(note => {
+    const isSel = SM.isSelected('notes', note.id);
+    return `
+    <div onclick="${selActive ? `SM.toggle('notes',${note.id})` : `openNote(${note.id})`}"
+         oncontextmenu="event.preventDefault();SM.start('notes',${note.id})"
          id="note-card-${note.id}"
-         style="background:var(--card);border:2px solid ${notesSelected.has(note.id) ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;
-                ${notesSelected.has(note.id) ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
+         style="background:var(--card);border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
+                border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;
+                transition:all 0.2s;position:relative;
+                ${isSel ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        ${notesSelectMode ? `
+        ${selActive ? `
           <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
-                      background:${notesSelected.has(note.id) ? 'var(--primary)' : 'transparent'};
+                      background:${isSel ? 'var(--primary)' : 'transparent'};
                       display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0">
-            ${notesSelected.has(note.id) ? '✓' : ''}
+            ${isSel ? '✓' : ''}
           </div>` : `
-          <div onclick="event.stopPropagation();showNoteOptions(${note.id})" 
+          <div onclick="event.stopPropagation();showNoteOptions(${note.id})"
                style="color:var(--text3);font-size:18px;cursor:pointer;padding:4px">⋮</div>`}
-        <div style="font-size:15px;font-weight:700;color:var(--text1)">${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">
+          ${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}
+        </div>
       </div>
       <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
-        ${note.contentText || note.content?.replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
+        ${note.contentText || (note.content || '').replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:left">${note.date}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function filterNotes() {

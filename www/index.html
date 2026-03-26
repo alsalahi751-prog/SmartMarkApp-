@@ -1529,6 +1529,18 @@ const SM = {
     if (section === 'saved') renderSavedList();
     else if (section === 'folders') renderFolders();
     else if (section === 'notes') renderNotes();
+    // تحديث نص زر الكل بعد الرسم
+    if (section === 'notes') {
+      setTimeout(() => {
+        const btn = document.getElementById('ab_notes_selall');
+        if (btn) {
+          const allSel = this.state['notes'].selected.size === notes.length && notes.length > 0;
+          btn.textContent = allSel
+            ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
+            : (currentLang === 'ar' ? 'الكل' : 'All');
+        }
+      }, 10);
+    }
   },
 
   // هل العنصر محدد؟
@@ -2997,24 +3009,32 @@ function cancelNotesSelect() {
 // toggleNoteSelect - replaced by SM.toggle
 
 function toggleSelectAllNotes() {
-  const sel = SM.getSelected('notes');
-  if (sel.size === notes.length) {
-    // إلغاء الكل
-    SM.state['notes'].selected.clear();
+  const currentCount = SM.state['notes'].selected.size;
+  const totalCount = notes.length;
+  
+  if (currentCount === totalCount && totalCount > 0) {
+    // إلغاء الكل - لكن نبقى في وضع التحديد
+    SM.state['notes'].selected = new Set();
     SM._updateBar('notes');
-    SM._rerender('notes');
+    renderNotes(); // إعادة رسم كاملة
   } else {
     // تحديد الكل
-    SM.selectAll('notes');
+    SM.state['notes'].active = true;
+    SM.state['notes'].selected = new Set(notes.map(n => n.id));
+    SM._updateBar('notes');
+    renderNotes();
   }
+  
   // تحديث نص الزر
-  const btn = document.getElementById('ab_notes_selall');
-  if (btn) {
-    const allSelected = SM.getSelected('notes').size === notes.length;
-    btn.textContent = allSelected 
-      ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
-      : (currentLang === 'ar' ? 'الكل' : 'All');
-  }
+  setTimeout(() => {
+    const btn = document.getElementById('ab_notes_selall');
+    if (btn) {
+      const allSelected = SM.state['notes'].selected.size === notes.length && notes.length > 0;
+      btn.textContent = allSelected 
+        ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
+        : (currentLang === 'ar' ? 'الكل' : 'All');
+    }
+  }, 10);
 }
 
 function deleteSelectedNotes() {

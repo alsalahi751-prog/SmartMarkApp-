@@ -1078,10 +1078,9 @@ body::before {
       <div class="action-bar" id="notesActionBar">
         <div class="action-bar-count" id="notesSelCount">0</div>
         <div class="action-bar-btns">
-          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('notes')" id="ab_notes_selall">تحديد الكل</button>
-          <button class="ab-btn ab-btn-delete-all" onclick="confirmDeleteAllNotes()" id="ab_notes_delall">🗑 الكل</button>
+          <button class="ab-btn ab-btn-select-all" onclick="toggleSelectAllNotes()" id="ab_notes_selall">الكل</button>
           <button class="ab-btn ab-btn-delete" onclick="deleteSelectedNotes()" id="ab_notes_del">🗑 حذف</button>
-          <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('notes')" id="ab_notes_cancel">✕</button>
+          <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('notes')" id="ab_notes_cancel">← رجوع</button>
         </div>
       </div>
       <!-- قائمة المذكرات -->
@@ -2585,10 +2584,9 @@ function applyTranslations(lang) {
     'ab_folders_selall': {ar:'تحديد الكل', en:'Select All'},
     'ab_folders_del': {ar:'🗑 حذف', en:'🗑 Delete'},
     'ab_folders_cancel': {ar:'✕', en:'✕'},
-    'ab_notes_selall': {ar:'تحديد الكل', en:'Select All'},
-    'ab_notes_delall': {ar:'🗑 الكل', en:'🗑 All'},
+    'ab_notes_selall': {ar:'الكل', en:'All'},
     'ab_notes_del': {ar:'🗑 حذف', en:'🗑 Delete'},
-    'ab_notes_cancel': {ar:'✕', en:'✕'},
+    'ab_notes_cancel': {ar:'← رجوع', en:'← Back'},
     'sl_export': {ar:'تصدير البيانات', en:'Export Data'},
     'sd_export': {ar:'حفظ نسخة احتياطية', en:'Save backup'},
     'sl_import': {ar:'استيراد البيانات', en:'Import Data'},
@@ -2997,6 +2995,27 @@ function cancelNotesSelect() {
 // confirmDeleteSelected - replaced by deleteSelectedNotes
 
 // toggleNoteSelect - replaced by SM.toggle
+
+function toggleSelectAllNotes() {
+  const sel = SM.getSelected('notes');
+  if (sel.size === notes.length) {
+    // إلغاء الكل
+    SM.state['notes'].selected.clear();
+    SM._updateBar('notes');
+    SM._rerender('notes');
+  } else {
+    // تحديد الكل
+    SM.selectAll('notes');
+  }
+  // تحديث نص الزر
+  const btn = document.getElementById('ab_notes_selall');
+  if (btn) {
+    const allSelected = SM.getSelected('notes').size === notes.length;
+    btn.textContent = allSelected 
+      ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
+      : (currentLang === 'ar' ? 'الكل' : 'All');
+  }
+}
 
 function deleteSelectedNotes() {
   if (notesSelected.size === 0) return;

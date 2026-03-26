@@ -2874,12 +2874,7 @@ let autoSaveTimer = null;
 let noteOptionsId = null;
 
 function showNoteOptions(id) {
-  noteOptionsId = id;
-  // تفعيل وضع التحديد وتحديد هذه المذكرة
-  notesSelectMode = true;
-  notesSelected.clear();
-  notesSelected.add(id);
-  renderNotes();
+  SM.start('notes', id);
 }
 
 function closeNoteOptions() {
@@ -2891,27 +2886,29 @@ function closeNoteOptions() {
 }
 
 function confirmDeleteNote() {
+  const id = noteOptionsId;
   closeNoteOptions();
-  const note = notes.find(n => n.id === noteOptionsId);
+  const note = notes.find(n => n.id === id);
   if (note) {
     deletedNotes.unshift({...note, deletedAt: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')});
     saveDeletedNotes();
+    notes = notes.filter(n => n.id !== id);
+    saveNotes();
+    SM.cancel('notes');
+    showToast(currentLang === 'ar' ? '🗑 تم النقل لسلة المحذوفات' : '🗑 Moved to trash');
   }
-  notes = notes.filter(n => n.id !== noteOptionsId);
-  saveNotes();
-  renderNotes();
-  showToast(currentLang === 'ar' ? '🗑 تم النقل لسلة المحذوفات' : '🗑 Moved to trash');
 }
 
 function confirmDeleteAllNotes() {
-  closeNoteOptions();
-  if (!confirm(currentLang === 'ar' ? 'حذف جميع المذكرات؟' : 'Delete all notes?')) return;
-  deletedNotes = [...notes.map(n => ({...n, deletedAt: new Date().toLocaleDateString()})), ...deletedNotes];
+  const count = notes.length;
+  if (count === 0) { showToast(currentLang === 'ar' ? 'لا توجد مذكرات' : 'No notes', 'var(--error)'); return; }
+  if (!confirm(currentLang === 'ar' ? `حذف جميع المذكرات (${count})؟` : `Delete all notes (${count})?`)) return;
+  deletedNotes = [...notes.map(n => ({...n, deletedAt: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')})), ...deletedNotes];
   saveDeletedNotes();
   notes = [];
   saveNotes();
-  renderNotes();
-  showToast(currentLang === 'ar' ? '🗑 تم حذف الكل' : '🗑 All deleted');
+  SM.cancel('notes');
+  showToast(currentLang === 'ar' ? '🗑 تم نقل الكل للسلة' : '🗑 All moved to trash');
 }
 
 function saveDeletedNotes() {
@@ -2996,27 +2993,9 @@ function cancelNotesSelect() {
   renderNotes();
 }
 
-function confirmDeleteSelected() {
-  if (notesSelected.size === 0) return;
-  const count = notesSelected.size;
-  if (!confirm(currentLang === 'ar' ? `حذف ${count} مذكرة؟` : `Delete ${count} notes?`)) return;
-  const toDelete = [...notesSelected];
-  toDelete.forEach(id => {
-    const note = notes.find(n => n.id === id);
-    if (note) deletedNotes.unshift({...note, deletedAt: new Date().toLocaleDateString()});
-  });
-  notes = notes.filter(n => !notesSelected.has(n.id));
-  saveNotes();
-  saveDeletedNotes();
-  cancelNotesSelect();
-  showToast(currentLang === 'ar' ? `🗑 تم حذف ${count} مذكرة` : `🗑 ${count} notes deleted`);
-}
+// confirmDeleteSelected - replaced by deleteSelectedNotes
 
-function toggleNoteSelect(id) {
-  if (notesSelected.has(id)) notesSelected.delete(id);
-  else notesSelected.add(id);
-  renderNotes();
-}
+// toggleNoteSelect - replaced by SM.toggle
 
 function deleteSelectedNotes() {
   if (notesSelected.size === 0) return;
@@ -3169,10 +3148,15 @@ function autoSaveNote() {
 
 function deleteNote(id) {
   if (!confirm(currentLang === 'ar' ? 'حذف هذه المذكرة؟' : 'Delete this note?')) return;
+  const note = notes.find(n => n.id === id);
+  if (note) {
+    deletedNotes.unshift({...note, deletedAt: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')});
+    saveDeletedNotes();
+  }
   notes = notes.filter(n => n.id !== id);
   saveNotes();
-  renderNotes();
-  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+  SM.cancel('notes');
+  showToast(currentLang === 'ar' ? '🗑 تم النقل لسلة المحذوفات' : '🗑 Moved to trash');
 }
 
 // ==========================================

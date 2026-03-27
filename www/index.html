@@ -1562,6 +1562,51 @@ const SM = {
 // إلغاء التحديد عند تغيير الشاشة
 const _origSwitchScreen = typeof switchScreen === 'function' ? switchScreen : null;
 
+// ==========================================
+// دوال تحديد المذكرات - نظيفة بالكامل
+// ==========================================
+function deleteSelectedNotes() {
+  const selectedIds = Array.from(SM.state['notes'].selected);
+  if (selectedIds.length === 0) {
+    showToast(currentLang === 'ar' ? '⚠️ لم تحدد أي مذكرة' : '⚠️ No notes selected', 'var(--error)');
+    return;
+  }
+  const count = selectedIds.length;
+  if (!confirm(currentLang === 'ar' ? `نقل ${count} مذكرة للسلة؟` : `Move ${count} notes to trash?`)) return;
+  selectedIds.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) deletedNotes.unshift({...note, deletedAt: new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')});
+  });
+  const toDelete = new Set(selectedIds);
+  notes = notes.filter(n => !toDelete.has(n.id));
+  saveNotes();
+  saveDeletedNotes();
+  SM.state['notes'].active = false;
+  SM.state['notes'].selected = new Set();
+  SM._updateBar('notes');
+  renderNotes();
+  showToast(currentLang === 'ar' ? `🗑 تم النقل للسلة (${count})` : `🗑 Moved to trash (${count})`);
+}
+
+function toggleSelectAllNotes() {
+  const total = notes.length;
+  const current = SM.state['notes'].selected.size;
+  if (current === total && total > 0) {
+    SM.state['notes'].selected = new Set();
+  } else {
+    SM.state['notes'].selected = new Set(notes.map(n => n.id));
+    SM.state['notes'].active = true;
+  }
+  SM._updateBar('notes');
+  renderNotes();
+  setTimeout(() => {
+    const btn = document.getElementById('ab_notes_selall');
+    if (btn) btn.textContent = SM.state['notes'].selected.size === notes.length && notes.length > 0
+      ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
+      : (currentLang === 'ar' ? 'الكل' : 'All');
+  }, 10);
+}
+
 function clearStorage() {
   const msg = currentLang === 'ar' 
     ? 'سيتم مسح ذاكرة التخزين المؤقت فقط\nلن تُحذف بياناتك\nهل تريد المتابعة؟'

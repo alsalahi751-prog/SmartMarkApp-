@@ -1591,11 +1591,11 @@ function deleteSelectedNotes() {
 function toggleSelectAllNotes() {
   const total = notes.length;
   const current = SM.state['notes'].selected.size;
+  SM.state['notes'].active = true; // نبقى في وضع التحديد دائماً
   if (current === total && total > 0) {
-    SM.state['notes'].selected = new Set();
+    SM.state['notes'].selected = new Set(); // إلغاء الكل فقط
   } else {
-    SM.state['notes'].selected = new Set(notes.map(n => n.id));
-    SM.state['notes'].active = true;
+    SM.state['notes'].selected = new Set(notes.map(n => n.id)); // تحديد الكل
   }
   SM._updateBar('notes');
   renderNotes();
@@ -3122,13 +3122,14 @@ function renderNotes(filter = '') {
     <div onclick="${selActive ? `SM.toggle('notes',${note.id})` : `openNote(${note.id})`}"
          oncontextmenu="event.preventDefault();SM.start('notes',${note.id})"
          id="note-card-${note.id}"
-         style="background:var(--card);border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
+         style="background:var(--card);border:2px solid ${isSel ? 'var(--primary)' : selActive ? 'var(--border)' : 'var(--border)'};
                 border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;
                 transition:all 0.2s;position:relative;
                 ${isSel ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         ${selActive ? `
-          <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
+          <div style="width:24px;height:24px;border-radius:50%;
+                      border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
                       background:${isSel ? 'var(--primary)' : 'transparent'};
                       display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0">
             ${isSel ? '✓' : ''}

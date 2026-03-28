@@ -3144,54 +3144,105 @@ function saveNotes() {
   }
 }
 
-function renderNotes(filter = '') {
-  const container = document.getElementById('notesList');
-  const filtered = notes.filter(n => 
-    !filter || n.title.includes(filter) || (n.content || '').includes(filter)
-  );
+function renderNotes(filter) {
+  filter = filter || '';
+  var container = document.getElementById('notesList');
+  var filtered = notes.filter(function(n) {
+    return !filter || (n.title||'').includes(filter) || (n.content||'').includes(filter);
+  });
 
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="emoji">📝</div>
-        <h3>${currentLang === 'ar' ? 'لا توجد مذكرات' : 'No notes yet'}</h3>
-        <p>${currentLang === 'ar' ? 'اضغط + لإضافة مذكرة جديدة' : 'Tap + to add a new note'}</p>
-      </div>`;
+    container.innerHTML = '<div class="empty-state"><div class="emoji">📝</div><h3>' +
+      (currentLang==='ar'?'لا توجد مذكرات':'No notes yet') + '</h3><p>' +
+      (currentLang==='ar'?'اضغط + لإضافة مذكرة جديدة':'Tap + to add a new note') + '</p></div>';
     return;
   }
 
-  const selActive = SM.isActive('notes');
-  container.innerHTML = filtered.map(note => {
-    const isSel = SM.isSelected('notes', note.id);
-    return `
-    <div onclick="${selActive ? `SM.toggle('notes',${note.id})` : `openNote(${note.id})`}"
-         oncontextmenu="event.preventDefault();SM.start('notes',${note.id})"
-         id="note-card-${note.id}"
-         style="background:var(--card);border:2px solid ${isSel ? 'var(--primary)' : selActive ? 'var(--border)' : 'var(--border)'};
-                border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;
-                transition:all 0.2s;position:relative;
-                ${isSel ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        ${selActive ? `
-          <div style="width:24px;height:24px;border-radius:50%;
-                      border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
-                      background:${isSel ? 'var(--primary)' : 'transparent'};
-                      display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0">
-            ${isSel ? '✓' : ''}
-          </div>` : `
-          <div onclick="event.stopPropagation();showNoteOptions(${note.id})"
-               style="color:var(--text3);font-size:18px;cursor:pointer;padding:4px">⋮</div>`}
-        <div style="font-size:15px;font-weight:700;color:var(--text1)">
-          ${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}
-        </div>
-      </div>
-      <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
-        ${note.contentText || (note.content || '').replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:left">${note.date}</div>
-    </div>`;
-  }).join('');
+  var selActive = SM.state['notes'].active;
+  container.innerHTML = '';
+
+  filtered.forEach(function(note) {
+    var isSel = SM.state['notes'].selected.has(note.id);
+    
+    // الكارد الرئيسي
+    var card = document.createElement('div');
+    card.id = 'note-card-' + note.id;
+    card.style.cssText = 'background:var(--card);border:2px solid ' + 
+      (isSel ? 'var(--primary)' : 'var(--border)') + 
+      ';border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;' +
+      (isSel ? 'box-shadow:0 0 0 2px var(--primary-glow)' : '');
+    
+    // عند النقر
+    card.addEventListener('click', (function(id){ 
+      return function(e) {
+        e.stopPropagation();
+        if (SM.state['notes'].active) {
+          var sel = SM.state['notes'].selected;
+          if (sel.has(id)) sel.delete(id); else sel.add(id);
+          SM._updateBar('notes');
+          renderNotes(document.getElementById('notesSearch').value);
+          var btn = document.getElementById('ab_notes_selall');
+          if (btn) btn.textContent = sel.size === notes.length && notes.length > 0
+            ? (currentLang==='ar'?'إلغاء الكل':'Deselect All')
+            : (currentLang==='ar'?'الكل':'All');
+        } else {
+          openNote(id);
+        }
+      };
+    })(note.id));
+    
+    // عند الضغط المطول (كليك يمين)
+    card.addEventListener('contextmenu', (function(id){
+      return function(e) { e.preventDefault(); SM.start('notes', id); };
+    })(note.id));
+
+    // الصف العلوي
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+
+    if (selActive) {
+      // دائرة التحديد
+      var circle = document.createElement('div');
+      circle.style.cssText = 'width:24px;height:24px;border-radius:50%;border:2px solid ' +
+        (isSel ? 'var(--primary)' : 'var(--border)') +
+        ';background:' + (isSel ? 'var(--primary)' : 'transparent') +
+        ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0';
+      circle.textContent = isSel ? '✓' : '';
+      row.appendChild(circle);
+    } else {
+      // زر القائمة ⋮
+      var menuBtn = document.createElement('div');
+      menuBtn.style.cssText = 'color:var(--text3);font-size:18px;cursor:pointer;padding:4px';
+      menuBtn.textContent = '⋮';
+      menuBtn.addEventListener('click', (function(id){
+        return function(e) { e.stopPropagation(); showNoteOptions(id); };
+      })(note.id));
+      row.appendChild(menuBtn);
+    }
+
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:15px;font-weight:700;color:var(--text1)';
+    title.textContent = note.title || (currentLang==='ar'?'بدون عنوان':'Untitled');
+    row.appendChild(title);
+    card.appendChild(row);
+
+    // المحتوى
+    var preview = document.createElement('div');
+    preview.style.cssText = 'font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right';
+    preview.textContent = note.contentText || (note.content||'').replace(/<[^>]*>/g,'') || 
+      (currentLang==='ar'?'لا يوجد محتوى':'No content');
+    card.appendChild(preview);
+
+    // التاريخ
+    var dateDiv = document.createElement('div');
+    dateDiv.style.cssText = 'font-size:11px;color:var(--text3);margin-top:8px;text-align:left';
+    dateDiv.textContent = note.date;
+    card.appendChild(dateDiv);
+
+    container.appendChild(card);
+  });
 }
+
 
 function filterNotes() {
   const q = document.getElementById('notesSearch').value;

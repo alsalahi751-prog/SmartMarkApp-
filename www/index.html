@@ -1565,6 +1565,24 @@ const _origSwitchScreen = typeof switchScreen === 'function' ? switchScreen : nu
 // ==========================================
 // دوال تحديد المذكرات - نظيفة بالكامل
 // ==========================================
+function handleNoteClick(id) {
+  if (SM.state['notes'].active) {
+    // وضع التحديد: toggle
+    const sel = SM.state['notes'].selected;
+    if (sel.has(id)) sel.delete(id);
+    else sel.add(id);
+    SM._updateBar('notes');
+    renderNotes();
+    // تحديث نص زر الكل
+    const btn = document.getElementById('ab_notes_selall');
+    if (btn) btn.textContent = sel.size === notes.length && notes.length > 0
+      ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
+      : (currentLang === 'ar' ? 'الكل' : 'All');
+  } else {
+    openNote(id);
+  }
+}
+
 function deleteSelectedNotes() {
   const selectedIds = Array.from(SM.state['notes'].selected);
   if (selectedIds.length === 0) {
@@ -1591,20 +1609,47 @@ function deleteSelectedNotes() {
 function toggleSelectAllNotes() {
   const total = notes.length;
   const current = SM.state['notes'].selected.size;
-  SM.state['notes'].active = true; // نبقى في وضع التحديد دائماً
+  SM.state['notes'].active = true;
   if (current === total && total > 0) {
-    SM.state['notes'].selected = new Set(); // إلغاء الكل فقط
+    SM.state['notes'].selected = new Set();
   } else {
-    SM.state['notes'].selected = new Set(notes.map(n => n.id)); // تحديد الكل
+    SM.state['notes'].selected = new Set(notes.map(n => n.id));
   }
   SM._updateBar('notes');
-  renderNotes();
-  setTimeout(() => {
-    const btn = document.getElementById('ab_notes_selall');
-    if (btn) btn.textContent = SM.state['notes'].selected.size === notes.length && notes.length > 0
-      ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
-      : (currentLang === 'ar' ? 'الكل' : 'All');
-  }, 10);
+  // إعادة بناء مباشرة بدون استدعاء renderNotes لتجنب مشكلة التوقيت
+  const container = document.getElementById('notesList');
+  const selActive = SM.state['notes'].active;
+  container.innerHTML = notes.map(note => {
+    const isSel = SM.state['notes'].selected.has(note.id);
+    return `
+    <div onclick="handleNoteClick(${note.id})"
+         oncontextmenu="event.preventDefault();SM.start('notes',${note.id})"
+         id="note-card-${note.id}"
+         style="background:var(--card);border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
+                border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;
+                ${isSel ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="width:24px;height:24px;border-radius:50%;
+                    border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
+                    background:${isSel ? 'var(--primary)' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0">
+          ${isSel ? '✓' : ''}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">
+          ${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
+        ${note.contentText || (note.content||'').replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:left">${note.date}</div>
+    </div>`;
+  }).join('');
+  // تحديث زر الكل
+  const btn = document.getElementById('ab_notes_selall');
+  if (btn) btn.textContent = SM.state['notes'].selected.size === notes.length && notes.length > 0
+    ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
+    : (currentLang === 'ar' ? 'الكل' : 'All');
 }
 
 function clearStorage() {

@@ -1888,32 +1888,64 @@ let savedSelectMode = false;
 let savedSelectedItems = new Set();
 
 function renderSavedList() {
-  const container = document.getElementById('saved-list');
-  const p = PLATFORMS;
-  const selActive = SM.isActive('saved');
-  container.innerHTML = items.map(item => {
-    const isSel = SM.isSelected('saved', item.id);
-    return `
-    <div class="list-item" 
-         onclick="${selActive ? `SM.toggle('saved',${item.id})` : `openDetail(${item.id})`}"
-         oncontextmenu="event.preventDefault();SM.start('saved',${item.id})"
-         style="${isSel ? 'background:var(--primary-glow);border-right:3px solid var(--primary)' : ''}">
-      ${selActive ? `
-        <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--primary);
-                    background:${isSel ? 'var(--primary)' : 'transparent'};
-                    display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0">
-          ${isSel ? '✓' : ''}
-        </div>` : ''}
-      <div class="list-thumb ${p[item.platform].class}"><span>${item.emoji}</span></div>
-      <div class="list-info">
-        <div class="list-title">${item.title}</div>
-        <div class="list-sub">${p[item.platform].icon} ${item.platform === 'other' ? (currentLang === 'ar' ? 'رابط' : 'Link') : item.platform} · ${item.date}</div>
-      </div>
-      <div class="list-badge" style="background:${
-        item.type==='video'?'#7c3aed':item.type==='image'?'#0891b2':'#065f46'
-      }">${item.type==='video'?'🎬':item.type==='image'?'🖼':'🔗'}</div>
-    </div>`; 
-  }).join('');
+  var container = document.getElementById('saved-list');
+  var p = PLATFORMS;
+  var selActive = SM.state['saved'].active;
+  container.innerHTML = '';
+
+  if (items.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="emoji">📌</div><h3>' +
+      (currentLang==='ar'?'لا توجد محفوظات':'No saved items') + '</h3></div>';
+    return;
+  }
+
+  items.forEach(function(item) {
+    var isSel = SM.state['saved'].selected.has(item.id);
+    var platName = item.platform==='other' ? (currentLang==='ar'?'رابط':'Link') : item.platform;
+
+    var row = document.createElement('div');
+    row.className = 'list-item';
+    if (isSel) row.style.cssText = 'background:var(--primary-glow);border-right:3px solid var(--primary)';
+
+    row.addEventListener('click', (function(id){ return function(e) {
+      e.stopPropagation();
+      if (SM.state['saved'].active) { SM.toggle('saved', id); }
+      else { openDetail(id); }
+    };})(item.id));
+
+    row.addEventListener('contextmenu', (function(id){ return function(e) {
+      e.preventDefault(); SM.start('saved', id);
+    };})(item.id));
+
+    if (selActive) {
+      var circle = document.createElement('div');
+      circle.style.cssText = 'width:24px;height:24px;border-radius:50%;border:2px solid ' +
+        (isSel?'var(--primary)':'var(--border)') + ';background:' +
+        (isSel?'var(--primary)':'transparent') +
+        ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0';
+      circle.textContent = isSel ? '✓' : '';
+      row.appendChild(circle);
+    }
+
+    var thumb = document.createElement('div');
+    thumb.className = 'list-thumb ' + p[item.platform].class;
+    thumb.innerHTML = '<span>' + item.emoji + '</span>';
+    row.appendChild(thumb);
+
+    var info = document.createElement('div');
+    info.className = 'list-info';
+    info.innerHTML = '<div class="list-title">' + item.title + '</div>' +
+      '<div class="list-sub">' + p[item.platform].icon + ' ' + platName + ' · ' + item.date + '</div>';
+    row.appendChild(info);
+
+    var badge = document.createElement('div');
+    badge.className = 'list-badge';
+    badge.style.background = item.type==='video'?'#7c3aed':item.type==='image'?'#0891b2':'#065f46';
+    badge.textContent = item.type==='video'?'🎬':item.type==='image'?'🖼':'🔗';
+    row.appendChild(badge);
+
+    container.appendChild(row);
+  });
 }
 
 function startSavedSelect(id) {
@@ -1989,37 +2021,76 @@ function moveSelectedSaved() {
 }
 
 function renderFolders() {
-  // إظهار أزرار الرئيسية عند الرجوع
-  const btnSel = document.getElementById('btnSelectFolders');
-  const btnNew = document.getElementById('btnNewFolder');
+  var btnSel = document.getElementById('btnSelectFolders');
+  var btnNew = document.getElementById('btnNewFolder');
   if (btnSel) btnSel.style.display = '';
   if (btnNew) btnNew.style.display = '';
-  const grid = document.getElementById('folders-grid');
-  const newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
-  const fSelActive = SM.isActive('folders');
-  grid.innerHTML = folders.map(f => {
-    const fSel = SM.isSelected('folders', f.id);
-    return `
-    <div class="folder-card" style="--folder-color:${f.color};${fSel ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}" 
-         onclick="${fSelActive ? `SM.toggle('folders',${f.id})` : `openFolder(${f.id})`}"
-         oncontextmenu="event.preventDefault();SM.start('folders',${f.id})"
-         id="fc-${f.id}">
-      ${fSelActive ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${fSel ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">${fSel ? '✓' : ''}</div>` : ''}
-      <div class="folder-icon">${f.icon}</div>
-      <div class="folder-name">${f.name}</div>
-      <div class="folder-count">${items.filter(i=>i.folderId===f.id).length} ${currentLang === 'ar' ? 'عناصر' : 'items'}</div>
-      <div class="folder-bar" style="background:${f.color};width:${Math.min(100,items.filter(i=>i.folderId===f.id).length*20)}%"></div>
-    </div>
-  `; }).join('') + `
-    <div class="new-folder-card" onclick="createFolder()">
-      <span>➕</span>
-      <p>${newFolderText}</p>
-    </div>`;
+
+  var grid = document.getElementById('folders-grid');
+  var newFolderText = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].newFolder : 'مجلد جديد';
+  var selActive = SM.state['folders'].active;
+  grid.innerHTML = '';
+
+  folders.forEach(function(f) {
+    var fSel = SM.state['folders'].selected.has(f.id);
+    var itemCount = items.filter(function(i){ return i.folderId===f.id; }).length;
+
+    var card = document.createElement('div');
+    card.className = 'folder-card';
+    card.id = 'fc-' + f.id;
+    card.style.cssText = '--folder-color:' + f.color + ';' +
+      (fSel?'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)':'');
+
+    card.addEventListener('click', (function(id){ return function(e) {
+      e.stopPropagation();
+      if (SM.state['folders'].active) { SM.toggle('folders', id); }
+      else { openFolder(id); }
+    };})(f.id));
+
+    card.addEventListener('contextmenu', (function(id){ return function(e) {
+      e.preventDefault(); SM.start('folders', id);
+    };})(f.id));
+
+    if (selActive) {
+      var circle = document.createElement('div');
+      circle.style.cssText = 'position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid ' +
+        (fSel?'var(--primary)':'var(--border)') + ';background:' +
+        (fSel?'var(--primary)':'transparent') +
+        ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px';
+      circle.textContent = fSel ? '✓' : '';
+      card.appendChild(circle);
+    }
+
+    var icon = document.createElement('div');
+    icon.className = 'folder-icon';
+    icon.textContent = f.icon;
+    card.appendChild(icon);
+
+    var name = document.createElement('div');
+    name.className = 'folder-name';
+    name.textContent = f.name;
+    card.appendChild(name);
+
+    var countEl = document.createElement('div');
+    countEl.className = 'folder-count';
+    countEl.textContent = itemCount + ' ' + (currentLang==='ar'?'عناصر':'items');
+    card.appendChild(countEl);
+
+    var bar = document.createElement('div');
+    bar.className = 'folder-bar';
+    bar.style.cssText = 'background:' + f.color + ';width:' + Math.min(100,itemCount*20) + '%';
+    card.appendChild(bar);
+
+    grid.appendChild(card);
+  });
+
+  var newCard = document.createElement('div');
+  newCard.className = 'new-folder-card';
+  newCard.addEventListener('click', createFolder);
+  newCard.innerHTML = '<span>➕</span><p>' + newFolderText + '</p>';
+  grid.appendChild(newCard);
 }
 
-// ==========================================
-// ACTIONS
-// ==========================================
 function setFilter(type, el) {
   activeFilter = type;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));

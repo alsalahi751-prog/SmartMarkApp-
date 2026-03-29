@@ -1059,12 +1059,12 @@ body::before {
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="notesTitle">📝 مذكراتي</h2>
         <div style="display:flex;gap:10px;align-items:center">
-          <button onclick="openTrash()" id="btnTrash" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);padding:6px 12px;border-radius:10px;color:var(--text2);font-size:12px;font-weight:700;font-family:system-ui,Tahoma,Arial,sans-serif;-webkit-tap-highlight-color:transparent;"
+          <div onclick="openTrash()" id="btnTrash"
                style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);padding:6px 12px;border-radius:10px;color:var(--text2);font-size:12px;font-weight:700">
             <span style="font-size:16px">♻️</span>
             <span id="trashBtnText">سلة المحذوفات</span>
-          </button>
-          <button onclick="addNote()" id="btnAddNote" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:system-ui,Tahoma,Arial,sans-serif;padding:4px 8px;-webkit-tap-highlight-color:transparent;">+ جديد</button>
+          </div>
+          <div class="see-all" onclick="addNote()" id="btnAddNote">+ جديد</div>
         </div>
       </div>
 
@@ -1084,7 +1084,7 @@ body::before {
         </div>
       </div>
       <!-- قائمة المذكرات -->
-      <div id="notesList" style="padding:16px 20px;touch-action:manipulation"></div>
+      <div id="notesList" style="padding:16px 20px"></div>
     </div>
 
     <!-- نافذة خيارات المذكرة -->
@@ -1616,8 +1616,35 @@ function toggleSelectAllNotes() {
     SM.state['notes'].selected = new Set(notes.map(n => n.id));
   }
   SM._updateBar('notes');
-  // استدعاء renderNotes الجديدة
-  renderNotes(document.getElementById('notesSearch') ? document.getElementById('notesSearch').value : '');
+  // إعادة بناء مباشرة بدون استدعاء renderNotes لتجنب مشكلة التوقيت
+  const container = document.getElementById('notesList');
+  const selActive = SM.state['notes'].active;
+  container.innerHTML = notes.map(note => {
+    const isSel = SM.state['notes'].selected.has(note.id);
+    return `
+    <div onclick="handleNoteClick(${note.id})"
+         oncontextmenu="event.preventDefault();SM.start('notes',${note.id})"
+         id="note-card-${note.id}"
+         style="background:var(--card);border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
+                border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;position:relative;
+                ${isSel ? 'box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="width:24px;height:24px;border-radius:50%;
+                    border:2px solid ${isSel ? 'var(--primary)' : 'var(--border)'};
+                    background:${isSel ? 'var(--primary)' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0">
+          ${isSel ? '✓' : ''}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">
+          ${note.title || (currentLang === 'ar' ? 'بدون عنوان' : 'Untitled')}
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
+        ${note.contentText || (note.content||'').replace(/<[^>]*>/g,'') || (currentLang === 'ar' ? 'لا يوجد محتوى' : 'No content')}
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:left">${note.date}</div>
+    </div>`;
+  }).join('');
   // تحديث زر الكل
   const btn = document.getElementById('ab_notes_selall');
   if (btn) btn.textContent = SM.state['notes'].selected.size === notes.length && notes.length > 0

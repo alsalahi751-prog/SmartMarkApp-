@@ -1023,7 +1023,7 @@ body::before {
       <div class="action-bar" id="savedActionBar">
         <div class="action-bar-count" id="savedSelCount">0</div>
         <div class="action-bar-btns">
-          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('saved')" id="ab_saved_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-select-all" onclick="toggleSelectAll('saved')" id="ab_saved_selall">الكل</button>
           <button class="ab-btn ab-btn-move" onclick="moveSelectedSaved()" id="ab_saved_move">📂 نقل</button>
           <button class="ab-btn ab-btn-delete" onclick="deleteSelectedSaved()" id="ab_saved_del">🗑 حذف</button>
           <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('saved')" id="ab_saved_cancel">✕</button>
@@ -1046,7 +1046,7 @@ body::before {
       <div class="action-bar" id="foldersActionBar">
         <div class="action-bar-count" id="foldersSelCount">0</div>
         <div class="action-bar-btns">
-          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('folders')" id="ab_folders_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-select-all" onclick="toggleSelectAll('folders')" id="ab_folders_selall">الكل</button>
           <button class="ab-btn ab-btn-delete" onclick="deleteSelectedFolders()" id="ab_folders_del">🗑 حذف</button>
           <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('folders')" id="ab_folders_cancel">✕</button>
         </div>
@@ -1650,6 +1650,27 @@ function toggleSelectAllNotes() {
   if (btn) btn.textContent = SM.state['notes'].selected.size === notes.length && notes.length > 0
     ? (currentLang === 'ar' ? 'إلغاء الكل' : 'Deselect All')
     : (currentLang === 'ar' ? 'الكل' : 'All');
+}
+
+function toggleSelectAll(section) {
+  var allItems = section==='saved' ? items.map(function(i){return i.id;}) :
+                 section==='folders' ? folders.map(function(f){return f.id;}) :
+                 notes.map(function(n){return n.id;});
+  var total = allItems.length;
+  var current = SM.state[section].selected.size;
+  SM.state[section].active = true;
+  if (current === total && total > 0) {
+    SM.state[section].selected = new Set();
+  } else {
+    SM.state[section].selected = new Set(allItems);
+  }
+  SM._updateBar(section);
+  SM._rerender(section);
+  // تحديث نص الزر
+  var btn = document.getElementById('ab_' + section + '_selall');
+  if (btn) btn.textContent = SM.state[section].selected.size === total && total > 0
+    ? (currentLang==='ar' ? 'إلغاء الكل' : 'Deselect All')
+    : (currentLang==='ar' ? 'الكل' : 'All');
 }
 
 function clearStorage() {
@@ -2750,11 +2771,11 @@ function applyTranslations(lang) {
   if (navNotesLabel) navNotesLabel.textContent = lang === 'ar' ? 'مذكرات' : 'Notes';
   // تحديد الكل والإجراءات
   const ids = {
-    'ab_saved_selall': {ar:'تحديد الكل', en:'Select All'},
+    'ab_saved_selall': {ar:'الكل', en:'All'},
     'ab_saved_move': {ar:'📂 نقل', en:'📂 Move'},
     'ab_saved_del': {ar:'🗑 حذف', en:'🗑 Delete'},
     'ab_saved_cancel': {ar:'✕', en:'✕'},
-    'ab_folders_selall': {ar:'تحديد الكل', en:'Select All'},
+    'ab_folders_selall': {ar:'الكل', en:'All'},
     'ab_folders_del': {ar:'🗑 حذف', en:'🗑 Delete'},
     'ab_folders_cancel': {ar:'✕', en:'✕'},
     'ab_notes_selall': {ar:'الكل', en:'All'},

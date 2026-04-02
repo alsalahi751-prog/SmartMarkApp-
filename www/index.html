@@ -1463,7 +1463,6 @@ const SM = {
     saved:   { active: false, selected: new Set() },
     folders: { active: false, selected: new Set() },
     notes:   { active: false, selected: new Set() },
-    folderItems: { active: false, selected: new Set(), folderId: null },
   },
 
   // بدء وضع التحديد
@@ -1492,12 +1491,11 @@ const SM = {
   // تحديد الكل
   selectAll(section) {
     const s = this.state[section];
-    s.active = true;
+    s.active = true;  // تأكد أن وضع التحديد نشط
     let all = [];
     if (section === 'saved') all = items.map(i => i.id);
     else if (section === 'folders') all = folders.map(f => f.id);
     else if (section === 'notes') all = notes.map(n => n.id);
-    else if (section === 'folderItems') all = items.filter(i => i.folderId === s.folderId).map(i => i.id);
     all.forEach(id => s.selected.add(id));
     this._updateBar(section);
     this._rerender(section);
@@ -1531,7 +1529,6 @@ const SM = {
     if (section === 'saved') renderSavedList();
     else if (section === 'folders') renderFolders();
     else if (section === 'notes') renderNotes();
-    else if (section === 'folderItems') openFolder(this.state.folderItems.folderId);
     // تحديث نص زر الكل بعد الرسم
     if (section === 'notes') {
       setTimeout(() => {
@@ -1835,7 +1832,7 @@ function finishOnboarding() {
 // ==========================================
 function switchScreen(name) {
   // إلغاء التحديد في القسم الحالي
-  ['saved','folders','notes','folderItems'].forEach(s => SM.cancel(s));
+  ['saved','folders','notes'].forEach(s => SM.cancel(s));
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
@@ -2460,40 +2457,17 @@ function openFolder(folderId) {
   const folder = folders.find(f => f.id === folderId);
   if (!folder) return;
   switchScreen('folders');
-  
   // إخفاء أزرار الرئيسية عند فتح مجلد
-  if(document.getElementById('btnSelectFolders')) document.getElementById('btnSelectFolders').style.display = 'none';
-  if(document.getElementById('btnNewFolder')) document.getElementById('btnNewFolder').style.display = 'none';
+  document.getElementById('btnSelectFolders').style.display = 'none';
+  document.getElementById('btnNewFolder').style.display = 'none';
   
   const grid = document.getElementById('folders-grid');
   const folderItems = items.filter(i => i.folderId === folderId);
   const p = PLATFORMS;
   
-  // تحديث حالة SM للمجلد الحالي
-  SM.state.folderItems.folderId = folderId;
-  const selActive = SM.state.folderItems.active;
-
-  // إنشاء شريط الأدوات للمجلد
-  let actionBar = '';
-  if (selActive) {
-    const count = SM.state.folderItems.selected.size;
-    actionBar = `
-    <div class="action-bar show" style="grid-column:span 2; margin: 0 0 12px 0;">
-      <div class="action-bar-count">${count} ${currentLang === 'ar' ? 'محدد' : 'selected'}</div>
-      <div class="action-bar-btns">
-        <button class="ab-btn ab-btn-select-all" onclick="toggleSelectAll('folderItems')">${SM.state.folderItems.selected.size === folderItems.length ? (currentLang==='ar'?'إلغاء':'Deselect') : (currentLang==='ar'?'الكل':'All')}</button>
-        <button class="ab-btn ab-btn-delete" onclick="deleteSelectedFolderItems()">🗑</button>
-        <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('folderItems')">✕</button>
-      </div>
-    </div>`;
-  }
-
-  const backBtn = `<div style="grid-column:span 2;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-direction:row-reverse">
+  const backBtn = `<div style="grid-column:span 2;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-direction:row-reverse">
     <div style="font-size:18px;font-weight:800">${folder.icon} ${folder.name}</div>
-    <div style="display:flex; gap:8px;">
-      <button onclick="SM.start('folderItems', null); openFolder(${folderId});" style="background:var(--bg3);border:1px solid var(--border);padding:8px;border-radius:10px;color:var(--text1);cursor:pointer;">☑</button>
-      <button onclick="SM.cancel('folderItems'); renderFolders();" style="background:var(--bg3);border:1px solid var(--border);padding:8px 16px;border-radius:10px;color:var(--text1);font-family:inherit;cursor:pointer;font-size:13px">← ${currentLang === 'ar' ? 'رجوع' : 'Back'}</button>
-    </div>
+    <button onclick="renderFolders()" style="background:var(--bg3);border:1px solid var(--border);padding:8px 16px;border-radius:10px;color:var(--text1);font-family:system-ui,Tahoma,Arial,sans-serif;cursor:pointer;font-size:13px">← ${currentLang === 'ar' ? 'رجوع' : 'Back'}</button>
   </div>`;
 
   if (folderItems.length === 0) {
@@ -2505,14 +2479,8 @@ function openFolder(folderId) {
     return;
   }
 
-  grid.innerHTML = backBtn + actionBar + folderItems.map(item => {
-    const isSel = SM.state.folderItems.selected.has(item.id);
-    return `
-    <div class="item-card" 
-         onclick="if(SM.state.folderItems.active){ SM.toggle('folderItems', ${item.id}); }else{ openDetail(${item.id}); }"
-         oncontextmenu="event.preventDefault(); SM.start('folderItems', ${item.id});"
-         style="${isSel ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)' : ''}">
-      ${selActive ? `<div style="position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:${isSel ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;z-index:10">${isSel ? '✓' : ''}</div>` : ''}
+  grid.innerHTML = backBtn + folderItems.map(item => `
+    <div class="item-card" onclick="openDetail(${item.id})">
       <div class="item-thumb ${p[item.platform].class}">
         <span style="font-size:40px">${item.emoji}</span>
         <div class="platform-badge" style="background:${p[item.platform].color}">${p[item.platform].icon}</div>
@@ -2521,20 +2489,8 @@ function openFolder(folderId) {
         <div class="item-title">${item.title}</div>
         <div class="item-meta"><div class="item-date">${item.date}</div></div>
       </div>
-    </div>`;
-  }).join('');
-}
-
-function deleteSelectedFolderItems() {
-  const sel = SM.state.folderItems.selected;
-  if (sel.size === 0) return;
-  if (!confirm(currentLang === 'ar' ? 'حذف العناصر المحددة؟' : 'Delete selected items?')) return;
-  items = items.filter(i => !sel.has(i.id));
-  saveItems();
-  const fId = SM.state.folderItems.folderId;
-  SM.cancel('folderItems');
-  openFolder(fId);
-  showToast(currentLang === 'ar' ? '🗑 تم الحذف' : '🗑 Deleted');
+    </div>
+  `).join('');
 }
 
 const FOLDER_ICONS = [
@@ -3378,6 +3334,7 @@ function renderNotes(filter) {
     container.appendChild(card);
   });
 }
+
 
 function filterNotes() {
   const q = document.getElementById('notesSearch').value;

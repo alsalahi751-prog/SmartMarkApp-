@@ -1054,7 +1054,7 @@ body::before {
           <h2 id="savedTitle">📌 المحفوظات</h2>
           <p id="savedDesc">جميع العناصر المحفوظة مرتبة حسب التاريخ</p>
         </div>
-        <div class="see-all" id="btnSavedSelect" onclick="toggleSavedSelect()" style="color:var(--text2); cursor:pointer; font-size:20px;">☑</div>
+        <div class="see-all" id="btnSavedSelect" onclick="toggleSavedSelect()" style="display:none;">☑</div>
       </div>
 
       <div class="action-bar" id="savedActionBar">
@@ -1076,8 +1076,8 @@ body::before {
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="foldersTitle">📁 المجلدات</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="color:var(--text2); cursor:pointer; font-size:20px;">☑</div>
-          <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
+          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="display:none;">☑</div>
+          <div class="see-all" id="btnNewFolder" onclick="createFolder()" style="background:var(--primary);color:#fff;padding:6px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">+ جديد</div>
         </div>
       </div>
       <div class="action-bar" id="foldersActionBar">
@@ -1100,14 +1100,17 @@ body::before {
     <div class="screen" id="screen-notes">
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="notesTitle">📝 مذكراتي</h2>
-        <div style="display:flex;gap:10px;align-items:center">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
           <div onclick="openTrash()" id="btnTrash"
-               style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);padding:6px 12px;border-radius:10px;color:var(--text2);font-size:12px;font-weight:700">
-            <span style="font-size:16px">♻️</span>
+               style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);padding:8px 12px;border-radius:12px;color:var(--text2);font-size:13px;font-weight:700">
+            <span style="font-size:18px">♻️</span>
             <span id="trashBtnText">سلة المحذوفات</span>
           </div>
-          <div class="see-all" id="btnSelectNotes" onclick="toggleNotesSelect()" style="color:var(--text2); cursor:pointer; font-size:20px;">☑</div>
-          <div class="see-all" onclick="addNote()" id="btnAddNote">+ جديد</div>
+          <div class="see-all" id="btnSelectNotes" onclick="toggleNotesSelect()" style="display:none;">☑</div>
+          <div onclick="addNote()" id="btnAddNote" 
+               style="background:var(--primary);color:#fff;padding:8px 16px;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px var(--primary-glow)">
+            <span>✍️</span> <span id="btnAddNoteText">مذكرة جديدة</span>
+          </div>
         </div>
       </div>
 
@@ -1714,7 +1717,13 @@ function toggleSelectAll(section) {
   }
   
   SM._updateBar(section);
-  SM._rerender(section);
+  
+  // حل جذري لمشكلة Deselection Bug: فرض إعادة رسم كاملة فوراً
+  if (section === 'folderItems') {
+    openFolder(SM.state.folderItems.folderId);
+  } else {
+    SM._rerender(section);
+  }
   
   var btn = document.getElementById('ab_' + section + '_selall');
   if (btn) btn.textContent = SM.state[section].selected.size === total && total > 0
@@ -2545,8 +2554,9 @@ function openFolder(folderId) {
   header.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 0;flex-direction:row-reverse">
     <div style="font-size:18px;font-weight:800">${folder.icon} ${folder.name}</div>
     <div style="display:flex; gap:8px;">
-      <button onclick="if(SM.state.folderItems.active){ SM.cancel('folderItems'); }else{ SM.start('folderItems', null); } openFolder(${folderId});" style="background:${selActive ? 'var(--primary)' : 'var(--bg3)'};border:1px solid ${selActive ? 'var(--primary)' : 'var(--border)'};padding:8px;border-radius:10px;color:${selActive ? '#fff' : 'var(--text1)'};cursor:pointer;">☑</button>
-      <button onclick="closeFolderView()" style="background:var(--bg3);border:1px solid var(--border);padding:8px 16px;border-radius:10px;color:var(--text1);font-family:inherit;cursor:pointer;font-size:13px">← ${currentLang === 'ar' ? 'رجوع' : 'Back'}</button>
+      <button onclick="closeFolderView()" style="background:var(--bg3);border:1px solid var(--border);padding:8px 16px;border-radius:12px;color:var(--text1);font-family:inherit;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">
+        <span>←</span> <span>${currentLang === 'ar' ? 'رجوع' : 'Back'}</span>
+      </button>
     </div>
   </div>` + actionBar;
 
@@ -2584,7 +2594,9 @@ function closeFolderView() {
   document.getElementById('folders-grid').style.display = 'grid';
   document.getElementById('foldersTitle').parentElement.style.display = 'flex';
   SM.cancel('folderItems');
-  setTimeout(renderFolders, 50);
+  // تنظيف أي حالات تحديد معلقة للمجلدات لضمان عمل الضغط المطول بشكل صحيح
+  SM.cancel('folders');
+  setTimeout(renderFolders, 100);
 }
 
 function deleteSelectedFolderItems() {

@@ -755,13 +755,24 @@ body::before {
 
 .action-bar {
   display: none;
-  padding: 10px 16px;
+  padding: 12px 20px;
   background: var(--primary);
   align-items: center;
   justify-content: space-between;
   flex-direction: row-reverse;
-  gap: 8px;
-  animation: fadeIn 0.2s ease;
+  gap: 12px;
+  position: fixed;
+  bottom: 85px;
+  left: 20px;
+  right: 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--primary-glow);
+  z-index: 1000;
+  animation: slideUpAction 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideUpAction {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 .action-bar.show { display: flex; }
 .action-bar-count { color: #fff; font-weight: 800; font-size: 14px; white-space: nowrap; }
@@ -950,9 +961,35 @@ body::before {
 <div id="app">
   <div class="status-bar">
     <span>SmartMark Pro</span>
-    <span id="clock">۱۲:۳۰</span>
-    <span>🔋📶</span>
+    <span id="clock">12:30</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="statusNetwork" title="Network Strength" style="cursor:default">📶</span>
+      <div style="display:flex;align-items:center;gap:2px">
+        <span id="batteryLevel" style="font-size:10px">100%</span>
+        <span id="statusBattery" title="Battery Status" style="cursor:default">🔋</span>
+      </div>
+    </div>
   </div>
+  <script>
+    function updateStatusBar() {
+      const now = new Date();
+      const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+      const clockEl = document.getElementById('clock');
+      if (clockEl) clockEl.textContent = timeStr;
+
+      if (navigator.getBattery) {
+        navigator.getBattery().then(battery => {
+          const level = Math.floor(battery.level * 100) + '%';
+          const levelEl = document.getElementById('batteryLevel');
+          if (levelEl) levelEl.textContent = level;
+          const battEl = document.getElementById('statusBattery');
+          if (battEl) battEl.style.opacity = battery.charging ? '0.7' : '1';
+        });
+      }
+    }
+    setInterval(updateStatusBar, 10000);
+    updateStatusBar();
+  </script>
 
   <div class="screens">
 
@@ -1017,7 +1054,7 @@ body::before {
           <h2 id="savedTitle">📌 المحفوظات</h2>
           <p id="savedDesc">جميع العناصر المحفوظة مرتبة حسب التاريخ</p>
         </div>
-
+        <div class="see-all" id="btnSavedSelect" onclick="toggleSavedSelect()" style="color:var(--text2); cursor:pointer; font-size:20px;">☑</div>
       </div>
 
       <div class="action-bar" id="savedActionBar">
@@ -1039,7 +1076,7 @@ body::before {
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="foldersTitle">📁 المجلدات</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="color:var(--text2)">☑</div>
+          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="color:var(--text2); cursor:pointer; font-size:20px;">☑</div>
           <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
         </div>
       </div>
@@ -1069,6 +1106,7 @@ body::before {
             <span style="font-size:16px">♻️</span>
             <span id="trashBtnText">سلة المحذوفات</span>
           </div>
+          <div class="see-all" id="btnSelectNotes" onclick="toggleNotesSelect()" style="color:var(--text2); cursor:pointer; font-size:20px;">☑</div>
           <div class="see-all" onclick="addNote()" id="btnAddNote">+ جديد</div>
         </div>
       </div>
@@ -1435,27 +1473,16 @@ const PLATFORMS = {
   other:     { icon: '🌐', color: '#6366f1', class: 'bg-gen' },
 };
 
-let items = [
-  { id:1, title:'رحلة مذهلة في جبال الألب السويسرية', platform:'instagram', type:'image', emoji:'🏔', url:'instagram.com/p/swiss_alps_trip', notes:'منظر خلاب جداً، يستحق الزيارة', fav:true, date:'٢٠٢٤/١/١٥', folder:'سفر' },
-  { id:2, title:'أفضل وصفات الرامن اليابانية الأصيلة', platform:'youtube', type:'video', emoji:'🍜', url:'youtu.be/ramen_recipe_japan', notes:'وصفة ممتازة للطبخ', fav:false, date:'٢٠٢٤/١/١٤', folder:'طعام' },
-  { id:3, title:'مقابلة حصرية مع إيلون ماسك حول الذكاء الاصطناعي', platform:'twitter', type:'link', emoji:'🤖', url:'twitter.com/elonmusk/status/123', notes:'', fav:true, date:'٢٠٢٤/١/١٣', folder:'تقنية' },
-  { id:4, title:'رقصة فيروسية جديدة اجتاحت العالم', platform:'tiktok', type:'video', emoji:'💃', url:'tiktok.com/@viral_dance_2024', notes:'رقصة ممتعة جداً', fav:false, date:'٢٠٢٤/١/١٢', folder:null },
-  { id:5, title:'أجمل غروب شمس على ساحل المحيط الهادئ', platform:'instagram', type:'image', emoji:'🌅', url:'instagram.com/p/pacific_sunset', notes:'', fav:true, date:'٢٠٢٤/١/١١', folder:'سفر' },
-  { id:6, title:'كيف تصنع لغة برمجة جديدة من الصفر', platform:'youtube', type:'video', emoji:'💻', url:'youtu.be/build_programming_lang', notes:'مصدر تعليمي رائع للمطورين', fav:false, date:'٢٠٢٤/١/١٠', folder:'تقنية' },
-  { id:7, title:'أحدث ألبوم موسيقي - بيلي إيليش', platform:'instagram', type:'link', emoji:'🎵', url:'instagram.com/billieeilish/post', notes:'', fav:false, date:'٢٠٢٤/١/٩', folder:null },
-  { id:8, title:'وثائقي: سر بناء الأهرامات المصرية', platform:'youtube', type:'video', emoji:'🏺', url:'youtu.be/pyramid_secret', notes:'وثائقي مذهل ومفيد', fav:true, date:'٢٠٢٤/١/٨', folder:null },
-  { id:9, title:'أبرز لحظات كأس العالم 2026', platform:'twitter', type:'link', emoji:'⚽', url:'twitter.com/FIFAWorldCup/highlights', notes:'', fav:false, date:'٢٠٢٤/١/٧', folder:null },
-  { id:10, title:'تصميم داخلي حديث لغرفة معيشة صغيرة', platform:'pinterest', type:'image', emoji:'🛋', url:'pinterest.com/pin/living_room_design', notes:'أفكار ممتازة لشقتي', fav:true, date:'٢٠٢٤/١/٦', folder:null },
-  { id:11, title:'روتين صباحي للنجاح مع جيف بيزوس', platform:'linkedin', type:'link', emoji:'☀️', url:'linkedin.com/posts/jeff-bezos-morning', notes:'', fav:false, date:'٢٠٢٤/١/٥', folder:'تطوير ذات' },
-  { id:12, title:'أطرف القطط على الإنترنت 2024 تجميع', platform:'tiktok', type:'video', emoji:'🐱', url:'tiktok.com/@cats_compilation', notes:'لقطات مضحكة جداً 😂', fav:true, date:'٢٠٢٤/١/٤', folder:null },
-];
+let items = loadItems() || [];
+let folders = loadFoldersData() || [];
 
-let folders = [
-  { id:1, name:'سفر', icon:'✈️', color:'#06b6d4', count:2 },
-  { id:2, name:'تقنية', icon:'💻', color:'#6366f1', count:2 },
-  { id:3, name:'طعام', icon:'🍜', color:'#f59e0b', count:1 },
-  { id:4, name:'تطوير ذات', icon:'📚', color:'#10b981', count:1 },
-];
+function loadFoldersData() {
+  try {
+    const d = localStorage.getItem('sm_folders');
+    if (d) return JSON.parse(d);
+  } catch(e) {}
+  return [];
+}
 
 // ==========================================
 // SPLASH → ONBOARDING → APP
@@ -1503,7 +1530,13 @@ const SM = {
     else if (section === 'folders') all = folders.map(f => f.id);
     else if (section === 'notes') all = notes.map(n => n.id);
     else if (section === 'folderItems') all = items.filter(i => i.folderId === s.folderId).map(i => i.id);
-    all.forEach(id => s.selected.add(id));
+    
+    if (s.selected.size === all.length && all.length > 0) {
+      s.selected.clear();
+    } else {
+      all.forEach(id => s.selected.add(id));
+    }
+    
     this._updateBar(section);
     this._rerender(section);
   },
@@ -1661,20 +1694,28 @@ function toggleSelectAllNotes() {
 }
 
 function toggleSelectAll(section) {
-  var allItems = section==='saved' ? items.map(function(i){return i.id;}) :
-                 section==='folders' ? folders.map(function(f){return f.id;}) :
-                 notes.map(function(n){return n.id;});
+  var allItems = [];
+  if (section === 'saved') allItems = items.map(function(i){return i.id;});
+  else if (section === 'folders') allItems = folders.map(function(f){return f.id;});
+  else if (section === 'notes') allItems = notes.map(function(n){return n.id;});
+  else if (section === 'folderItems') {
+    const s = SM.state.folderItems;
+    allItems = items.filter(i => i.folderId === s.folderId).map(i => i.id);
+  }
+
   var total = allItems.length;
   var current = SM.state[section].selected.size;
   SM.state[section].active = true;
+  
   if (current === total && total > 0) {
     SM.state[section].selected = new Set();
   } else {
     SM.state[section].selected = new Set(allItems);
   }
+  
   SM._updateBar(section);
   SM._rerender(section);
-  // تحديث نص الزر
+  
   var btn = document.getElementById('ab_' + section + '_selall');
   if (btn) btn.textContent = SM.state[section].selected.size === total && total > 0
     ? (currentLang==='ar' ? 'إلغاء الكل' : 'Deselect All')
@@ -1993,40 +2034,30 @@ function renderSavedList() {
   });
 }
 
-function startSavedSelect(id) {
-  if (!savedSelectMode) {
-    savedSelectMode = true;
-    savedSelectedItems.clear();
-    document.getElementById('savedSelectionBar').style.display = 'flex';
+function toggleNotesSelect() {
+  if (SM.state['notes'].active) {
+    SM.cancel('notes');
+  } else {
+    SM.start('notes', null);
   }
-  toggleSavedItem(id);
+  renderNotes();
+}
+
+function toggleFoldersSelect() {
+  if (SM.state['folders'].active) {
+    SM.cancel('folders');
+  } else {
+    SM.start('folders', null);
+  }
+  renderFolders();
 }
 
 function toggleSavedSelect() {
-  savedSelectMode = !savedSelectMode;
-  savedSelectedItems.clear();
-  const bar = document.getElementById('savedSelectionBar');
-  const btn = document.getElementById('btnSavedSelect');
-  if (savedSelectMode) {
-    bar.style.display = 'flex';
-    btn.style.background = 'var(--primary)';
-    btn.style.color = '#fff';
-    btn.style.borderColor = 'var(--primary)';
+  if (SM.state['saved'].active) {
+    SM.cancel('saved');
   } else {
-    cancelSavedSelect();
+    SM.start('saved', null);
   }
-  renderSavedList();
-}
-
-function toggleSavedItem(id) {
-  if (savedSelectedItems.has(id)) {
-    savedSelectedItems.delete(id);
-  } else {
-    savedSelectedItems.add(id);
-  }
-  const count = savedSelectedItems.size;
-  const el = document.getElementById('savedSelectionCount');
-  if (el) el.textContent = currentLang === 'ar' ? `${count} محدد` : `${count} selected`;
   renderSavedList();
 }
 
@@ -2093,7 +2124,9 @@ function renderFolders() {
     };})(f.id));
 
     card.addEventListener('contextmenu', (function(id){ return function(e) {
-      e.preventDefault(); SM.start('folders', id);
+      e.preventDefault(); 
+      e.stopPropagation();
+      SM.start('folders', id);
     };})(f.id));
 
     if (selActive) {
@@ -2512,7 +2545,7 @@ function openFolder(folderId) {
   header.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 0;flex-direction:row-reverse">
     <div style="font-size:18px;font-weight:800">${folder.icon} ${folder.name}</div>
     <div style="display:flex; gap:8px;">
-      <button onclick="SM.start('folderItems', null); openFolder(${folderId});" style="background:var(--bg3);border:1px solid var(--border);padding:8px;border-radius:10px;color:var(--text1);cursor:pointer;">☑</button>
+      <button onclick="if(SM.state.folderItems.active){ SM.cancel('folderItems'); }else{ SM.start('folderItems', null); } openFolder(${folderId});" style="background:${selActive ? 'var(--primary)' : 'var(--bg3)'};border:1px solid ${selActive ? 'var(--primary)' : 'var(--border)'};padding:8px;border-radius:10px;color:${selActive ? '#fff' : 'var(--text1)'};cursor:pointer;">☑</button>
       <button onclick="closeFolderView()" style="background:var(--bg3);border:1px solid var(--border);padding:8px 16px;border-radius:10px;color:var(--text1);font-family:inherit;cursor:pointer;font-size:13px">← ${currentLang === 'ar' ? 'رجوع' : 'Back'}</button>
     </div>
   </div>` + actionBar;
@@ -2547,11 +2580,11 @@ function openFolder(folderId) {
 }
 
 function closeFolderView() {
-  SM.cancel('folderItems');
   document.getElementById('folder-items-view').style.display = 'none';
   document.getElementById('folders-grid').style.display = 'grid';
   document.getElementById('foldersTitle').parentElement.style.display = 'flex';
-  renderFolders();
+  SM.cancel('folderItems');
+  setTimeout(renderFolders, 50);
 }
 
 function deleteSelectedFolderItems() {

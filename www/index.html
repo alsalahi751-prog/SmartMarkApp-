@@ -1,115 +1,136 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
-    <title>SmartMark v2.2</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
-        body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
-        .header{display:flex;justify-content:space-between;align-items:center;padding:20px}
-        .title{font-size:28px;font-weight:bold}
-        .btn-add{background:#6366f1;border:none;padding:12px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer}
-        .trash{background:#2a2a3a;border:none;padding:12px 20px;border-radius:12px;color:#fff;margin:0 20px;display:flex;align-items:center;gap:8px}
-        .search{margin:20px;background:#1a1a2a;border:none;border-radius:12px;padding:14px;width:calc(100% - 40px);color:#fff;font-size:15px}
-        .empty{text-align:center;margin-top:80px}
-        .empty img{width:100px;opacity:0.5;margin-bottom:20px}
-        .empty h3{font-size:18px;margin-bottom:10px;color:#999}
-        .empty p{color:#666;font-size:14px}
-        .fab{position:fixed;bottom:90px;left:20px;width:60px;height:60px;background:#6366f1;border-radius:16px;border:none;color:#fff;font-size:32px;cursor:pointer;box-shadow:0 4px 12px rgba(99,102,241,0.4)}
-        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#14141f;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #2a2a3a}
-        .nav-item{text-align:center;font-size:12px;color:#666;cursor:pointer}
-        .nav-item.active{color:#6366f1}
-        .nav-item span{font-size:24px;display:block;margin-bottom:4px}
-        #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 24px;border-radius:8px;display:none;z-index:999}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
+<title>SmartMark v2.3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
+body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:20px}
+.title{font-size:26px;font-weight:bold}
+.btn-add{background:#6366f1;border:none;padding:10px 18px;border-radius:12px;color:#fff;font-size:15px;cursor:pointer}
+.trash{background:#1f1f2e;border:none;padding:10px 16px;border-radius:12px;color:#ccc;margin:0 20px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.search{margin:15px 20px;background:#1a1a2a;border:none;border-radius:12px;padding:13px;width:calc(100% - 40px);color:#fff;font-size:15px}
+.page{display:none;padding:0 10px}
+.page.active{display:block}
+.empty{text-align:center;margin-top:70px}
+.empty .icon{font-size:80px;opacity:.6;margin-bottom:15px}
+.note{background:#1a1a2a;margin:12px 10px;padding:14px;border-radius:12px;cursor:pointer}
+.note h4{margin-bottom:6px;font-size:16px}
+.note p{color:#999;font-size:13px}
+.note small{color:#666}
+.fab{position:fixed;bottom:90px;left:20px;width:58px;height:58px;background:#6366f1;border-radius:16px;border:none;color:#fff;font-size:30px;cursor:pointer;box-shadow:0 4px 12px rgba(99,102,241,.4);z-index:10}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#14141f;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #2a2a3a}
+.nav-item{text-align:center;font-size:12px;color:#666;cursor:pointer;padding:4px 8px}
+.nav-item.active{color:#6366f1}
+.nav-item span{font-size:22px;display:block;margin-bottom:3px}
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:10px 20px;border-radius:8px;display:none;z-index:999}
+</style>
 </head>
 <body>
-    <div id="toast"></div>
-    <div class="header">
-        <button class="btn-add" id="btnNew">+ جديد</button>
-        <div class="title" id="appTitle">📝 مذكراتي</div>
-    </div>
-    <button class="trash" id="btnTrash">♻️ سلة المحذوفات</button>
-    <input type="text" class="search" placeholder="ابحث في المذكرات...">
-    
-    <div class="empty">
-        <div style="font-size:80px">📝</div>
-        <h3>لا توجد مذكرات</h3>
-        <p>اضغط + لإضافة مذكرة جديدة</p>
-    </div>
+<div id="toast"></div>
 
-    <button class="fab" id="fab">+</button>
+<div class="header">
+  <button class="btn-add" id="btnNew">+ جديد</button>
+  <div class="title" id="appTitle">📝 مذكراتي</div>
+</div>
 
-    <div class="bottom-nav">
-        <div class="nav-item"><span>🏠</span>الرئيسية</div>
-        <div class="nav-item"><span>📌</span>المحفوظات</div>
-        <div class="nav-item"><span>📁</span>مجلدات</div>
-        <div class="nav-item active"><span>📝</span>مذكرات</div>
-        <div class="nav-item"><span>⚙️</span>الإعدادات</div>
-    </div>
+<!-- صفحات -->
+<div id="page-notes" class="page active">
+  <button class="trash" id="btnTrash">♻️ سلة المحذوفات</button>
+  <input type="text" id="search" class="search" placeholder="ابحث في المذكرات...">
+  <div id="notesList"></div>
+  <div id="emptyNotes" class="empty">
+    <div class="icon">📝</div>
+    <h3>لا توجد مذكرات</h3>
+    <p>اضغط + لإضافة مذكرة جديدة</p>
+  </div>
+</div>
 
-    <script>
-    // قاتل الكاش + تفعيل الأزرار لـ Capacitor
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        // 1. مسح أي بيانات قديمة مرة واحدة
-        if (!localStorage.getItem('sm_v22_clear')) {
-            localStorage.clear();
-            localStorage.setItem('sm_v22_clear', '1');
-            showToast('تم تنظيف البيانات القديمة');
-        }
+<div id="page-home" class="page">
+  <div class="empty"><div class="icon">🏠</div><h3>الرئيسية</h3><p>مرحبا بك في SmartMark</p></div>
+</div>
 
-        // 2. تفعيل الأزرار
-        document.getElementById('btnNew').onclick = newNote;
-        document.getElementById('fab').onclick = newNote;
-        document.getElementById('btnTrash').onclick = function(){
-            showToast('سلة المحذوفات فارغة');
-        };
+<div id="page-saved" class="page">
+  <div class="empty"><div class="icon">📌</div><h3>المحفوظات</h3><p>لا توجد عناصر محفوظة</p></div>
+</div>
 
-        // 3. النقر مرتين على العنوان للتبديل للغة + مسح الكل
-        let clickCount = 0;
-        document.getElementById('appTitle').onclick = function() {
-            clickCount++;
-            if (clickCount === 2) {
-                if (this.innerText.includes('مذكراتي')) {
-                    this.innerText = '📝 My Notes';
-                    showToast('Switched to English');
-                } else {
-                    this.innerText = '📝 مذكراتي';
-                    showToast('تم التبديل للعربية');
-                }
-                // إظهار زر مسح الكل
-                let clearBtn = document.getElementById('clearAll');
-                if (!clearBtn) {
-                    clearBtn = document.createElement('button');
-                    clearBtn.id = 'clearAll';
-                    clearBtn.innerText = 'Clear All';
-                    clearBtn.style.cssText = 'position:fixed;top:70px;left:20px;background:#ef4444;border:none;padding:8px 16px;border-radius:8px;color:#fff;z-index:999';
-                    clearBtn.onclick = function(){
-                        localStorage.clear();
-                        location.reload();
-                    };
-                    document.body.appendChild(clearBtn);
-                }
-                clickCount = 0;
-            }
-            setTimeout(()=>{clickCount=0}, 400);
-        };
+<div id="page-folders" class="page">
+  <div class="empty"><div class="icon">📁</div><h3>مجلدات</h3><p>قريبا</p></div>
+</div>
 
-        function newNote() {
-            let text = prompt('اكتب مذكرتك:');
-            if (text) showToast('تم الحفظ: ' + text.substring(0,20));
-        }
+<div id="page-settings" class="page">
+  <div style="padding:20px">
+    <h3 style="margin-bottom:15px">الإعدادات</h3>
+    <button id="clearAll" style="background:#ef4444;border:none;padding:12px 18px;border-radius:10px;color:#fff;width:100%;margin-bottom:10px">مسح كل البيانات</button>
+    <button id="langToggle" style="background:#2a2a3a;border:none;padding:12px 18px;border-radius:10px;color:#fff;width:100%">تبديل اللغة</button>
+  </div>
+</div>
 
-        function showToast(msg) {
-            let t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.display = 'block';
-            setTimeout(()=>{t.style.display='none'}, 2000);
-        }
+<button class="fab" id="fab">+</button>
+
+<div class="bottom-nav">
+  <div class="nav-item" data-page="home"><span>🏠</span>الرئيسية</div>
+  <div class="nav-item" data-page="saved"><span>📌</span>المحفوظات</div>
+  <div class="nav-item" data-page="folders"><span>📁</span>مجلدات</div>
+  <div class="nav-item active" data-page="notes"><span>📝</span>مذكرات</div>
+  <div class="nav-item" data-page="settings"><span>⚙️</span>الإعدادات</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const notesKey='sm_notes_v23', trashKey='sm_trash_v23';
+  let notes=JSON.parse(localStorage.getItem(notesKey)||'[]');
+  let trash=JSON.parse(localStorage.getItem(trashKey)||'[]');
+
+  function save(){ localStorage.setItem(notesKey,JSON.stringify(notes)); localStorage.setItem(trashKey,JSON.stringify(trash)); }
+  function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1800); }
+
+  function render(){
+    const list=document.getElementById('notesList');
+    const empty=document.getElementById('emptyNotes');
+    const q=document.getElementById('search').value.trim();
+    const filtered=notes.filter(n=>n.text.includes(q));
+    list.innerHTML='';
+    if(filtered.length===0){ empty.style.display='block'; return; }
+    empty.style.display='none';
+    filtered.slice().reverse().forEach(n=>{
+      const div=document.createElement('div'); div.className='note';
+      div.innerHTML=`<h4>${n.text.substring(0,30)}</h4><p>${n.text.substring(0,80)}</p><small>${new Date(n.date).toLocaleString('ar-EG')}</small>`;
+      div.onclick=()=>{ if(confirm('حذف هذه المذكرة؟')){ trash.push(n); notes=notes.filter(x=>x.id!==n.id); save(); render(); toast('تم النقل لسلة المحذوفات'); } };
+      list.appendChild(div);
     });
-    </script>
+  }
+
+  function addNote(){
+    const txt=prompt('اكتب مذكرتك:');
+    if(txt && txt.trim()){ notes.push({id:Date.now(),text:txt.trim(),date:Date.now()}); save(); render(); toast('تم الحفظ'); }
+  }
+
+  document.getElementById('btnNew').onclick=addNote;
+  document.getElementById('fab').onclick=addNote;
+  document.getElementById('search').oninput=render;
+  document.getElementById('btnTrash').onclick=()=>{ toast('المحذوفات: '+trash.length); };
+
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.onclick=()=>{
+      document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('page-'+el.dataset.page).classList.add('active');
+    };
+  });
+
+  document.getElementById('clearAll').onclick=()=>{ if(confirm('مسح كل شيء؟')){ localStorage.clear(); notes=[]; trash=[]; render(); toast('تم المسح'); } };
+  document.getElementById('langToggle').onclick=()=>{ const t=document.getElementById('appTitle'); t.textContent=t.textContent.includes('مذكراتي')?'📝 My Notes':'📝 مذكراتي'; };
+
+  // تنظيف مرة واحدة من البيانات القديمة
+  if(!localStorage.getItem('v23_init')){ localStorage.setItem('v23_init','1'); }
+
+  render();
+});
+</script>
 </body>
 </html>

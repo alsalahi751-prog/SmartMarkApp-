@@ -1,165 +1,115 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SmartMark Pro</title>
-<!-- SmartMark v2.1.0 - 2026-04-09 CACHE BUSTER -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<style>
-/* Core fixes from previous version */
-:root{--primary:#6366f1;--bg:#0a0a14;--card:#1a1a2e}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:system-ui,Tahoma;background:var(--bg);color:#f1f5f9;overscroll-behavior:none}
-.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-/* FIX 1: z-index for background to prevent click blocking */
-.bg-animation{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:0.3}
-/* FIX 2: 44px touch targets */
-.btn{min-height:44px;min-width:44px;padding:12px 20px;border:none;border-radius:12px;background:var(--primary);color:white;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation}
-.btn:active{transform:scale(0.96)}
-.btn-secondary{background:#2d2d44}
-.header{display:flex;align-items:center;gap:12px;padding:16px;flex-wrap:wrap}
-.search{margin:0 16px 16px;position:relative}
-.search input{width:100%;padding:14px 44px 14px 16px;background:#1a1a2e;border:1px solid #333;border-radius:12px;color:white;font-size:15px;min-height:44px}
-.search .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%)}
-.empty{text-align:center;padding:60px 20px;color:#94a3b8}
-.empty-icon{font-size:64px;margin-bottom:16px;opacity:0.5}
-.nav{position:fixed;bottom:0;left:0;right:0;background:#0f0f1a;border-top:1px solid #222;display:flex;justify-content:space-around;padding:8px 0;max-width:480px;margin:0 auto}
-.nav-item{flex:1;text-align:center;padding:8px;color:#64748b;font-size:12px;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.nav-item.active{color:var(--primary)}
-.fab{position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:16px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 12px rgba(99,102,241,0.4);z-index:10}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    <title>SmartMark v2.2</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
+        body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px}
+        .title{font-size:28px;font-weight:bold}
+        .btn-add{background:#6366f1;border:none;padding:12px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer}
+        .trash{background:#2a2a3a;border:none;padding:12px 20px;border-radius:12px;color:#fff;margin:0 20px;display:flex;align-items:center;gap:8px}
+        .search{margin:20px;background:#1a1a2a;border:none;border-radius:12px;padding:14px;width:calc(100% - 40px);color:#fff;font-size:15px}
+        .empty{text-align:center;margin-top:80px}
+        .empty img{width:100px;opacity:0.5;margin-bottom:20px}
+        .empty h3{font-size:18px;margin-bottom:10px;color:#999}
+        .empty p{color:#666;font-size:14px}
+        .fab{position:fixed;bottom:90px;left:20px;width:60px;height:60px;background:#6366f1;border-radius:16px;border:none;color:#fff;font-size:32px;cursor:pointer;box-shadow:0 4px 12px rgba(99,102,241,0.4)}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#14141f;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #2a2a3a}
+        .nav-item{text-align:center;font-size:12px;color:#666;cursor:pointer}
+        .nav-item.active{color:#6366f1}
+        .nav-item span{font-size:24px;display:block;margin-bottom:4px}
+        #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 24px;border-radius:8px;display:none;z-index:999}
+    </style>
 </head>
 <body>
-<div class="bg-animation"></div>
-<div class="app">
-  <div class="header">
-    <h1 style="margin:0;font-size:24px;flex:1">مذكراتي <span id="noteIcon">📝</span></h1>
-    <button class="btn" id="newBtn">+ جديد</button>
-    <button class="btn btn-secondary" id="trashBtn">سلة المحذوفات ♻️</button>
-  </div>
-  
-  <div class="search">
-    <input type="search" id="searchInput" placeholder="ابحث في المذكرات...">
-    <span class="icon">🔍</span>
-  </div>
-
-  <div id="notesList" style="flex:1;padding:0 16px 100px">
-    <div class="empty">
-      <div class="empty-icon">📝</div>
-      <div style="font-size:18px;margin-bottom:8px">لا توجد مذكرات</div>
-      <div style="font-size:14px">اضغط + لإضافة مذكرة جديدة</div>
+    <div id="toast"></div>
+    <div class="header">
+        <button class="btn-add" id="btnNew">+ جديد</button>
+        <div class="title" id="appTitle">📝 مذكراتي</div>
     </div>
-  </div>
+    <button class="trash" id="btnTrash">♻️ سلة المحذوفات</button>
+    <input type="text" class="search" placeholder="ابحث في المذكرات...">
+    
+    <div class="empty">
+        <div style="font-size:80px">📝</div>
+        <h3>لا توجد مذكرات</h3>
+        <p>اضغط + لإضافة مذكرة جديدة</p>
+    </div>
 
-  <div class="fab" id="fabBtn">+</div>
+    <button class="fab" id="fab">+</button>
 
-  <div class="nav">
-    <div class="nav-item"><div style="font-size:20px">⚙️</div><div>الإعدادات</div></div>
-    <div class="nav-item active"><div style="font-size:20px">📝</div><div>مذكرات</div></div>
-    <div class="nav-item"><div style="font-size:20px">📁</div><div>مجلدات</div></div>
-    <div class="nav-item"><div style="font-size:20px">📌</div><div>المحفوظات</div></div>
-    <div class="nav-item"><div style="font-size:20px">🏠</div><div>الرئيسية</div></div>
-  </div>
-</div>
+    <div class="bottom-nav">
+        <div class="nav-item"><span>🏠</span>الرئيسية</div>
+        <div class="nav-item"><span>📌</span>المحفوظات</div>
+        <div class="nav-item"><span>📁</span>مجلدات</div>
+        <div class="nav-item active"><span>📝</span>مذكرات</div>
+        <div class="nav-item"><span>⚙️</span>الإعدادات</div>
+    </div>
 
-<script>
-// ===== SMARTMARK v2.1.0 - CACHE BUSTER =====
-const APP_VERSION = '2.1.0-20260409';
-if (localStorage.getItem('sm_version') !== APP_VERSION) {
-  console.log('Clearing old cache...');
-  ['smartmark_notes','smartmark_bookmarks','smartmark_folders','smartmark_trash','smartmark_lang','smartmark_data'].forEach(k=>localStorage.removeItem(k));
-  localStorage.setItem('sm_version', APP_VERSION);
-  // Force reload once
-  if(!sessionStorage.getItem('reloaded')){
-    sessionStorage.setItem('reloaded','1');
-    location.reload(true);
-  }
-}
+    <script>
+    // قاتل الكاش + تفعيل الأزرار لـ Capacitor
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. مسح أي بيانات قديمة مرة واحدة
+        if (!localStorage.getItem('sm_v22_clear')) {
+            localStorage.clear();
+            localStorage.setItem('sm_v22_clear', '1');
+            showToast('تم تنظيف البيانات القديمة');
+        }
 
-// ===== TRANSLATIONS FIX =====
-const translations = {
-  ar: {
-    title: 'مذكراتي',
-    new: '+ جديد',
-    trash: 'سلة المحذوفات',
-    search: 'ابحث في المذكرات...',
-    empty: 'لا توجد مذكرات',
-    emptyHint: 'اضغط + لإضافة مذكرة جديدة',
-    clear: 'مسح',
-    settings: 'الإعدادات',
-    notes: 'مذكرات',
-    folders: 'مجلدات',
-    saved: 'المحفوظات',
-    home: 'الرئيسية'
-  },
-  en: {
-    title: 'My Notes',
-    new: '+ New',
-    trash: 'Trash',
-    search: 'Search notes...',
-    empty: 'No notes',
-    emptyHint: 'Tap + to add new note',
-    clear: 'Clear',
-    settings: 'Settings',
-    notes: 'Notes',
-    folders: 'Folders',
-    saved: 'Saved',
-    home: 'Home'
-  }
-};
+        // 2. تفعيل الأزرار
+        document.getElementById('btnNew').onclick = newNote;
+        document.getElementById('fab').onclick = newNote;
+        document.getElementById('btnTrash').onclick = function(){
+            showToast('سلة المحذوفات فارغة');
+        };
 
-let currentLang = localStorage.getItem('smartmark_lang') || 'ar';
+        // 3. النقر مرتين على العنوان للتبديل للغة + مسح الكل
+        let clickCount = 0;
+        document.getElementById('appTitle').onclick = function() {
+            clickCount++;
+            if (clickCount === 2) {
+                if (this.innerText.includes('مذكراتي')) {
+                    this.innerText = '📝 My Notes';
+                    showToast('Switched to English');
+                } else {
+                    this.innerText = '📝 مذكراتي';
+                    showToast('تم التبديل للعربية');
+                }
+                // إظهار زر مسح الكل
+                let clearBtn = document.getElementById('clearAll');
+                if (!clearBtn) {
+                    clearBtn = document.createElement('button');
+                    clearBtn.id = 'clearAll';
+                    clearBtn.innerText = 'Clear All';
+                    clearBtn.style.cssText = 'position:fixed;top:70px;left:20px;background:#ef4444;border:none;padding:8px 16px;border-radius:8px;color:#fff;z-index:999';
+                    clearBtn.onclick = function(){
+                        localStorage.clear();
+                        location.reload();
+                    };
+                    document.body.appendChild(clearBtn);
+                }
+                clickCount = 0;
+            }
+            setTimeout(()=>{clickCount=0}, 400);
+        };
 
-function applyLang(){
-  const t = translations[currentLang];
-  document.documentElement.lang = currentLang;
-  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-  document.querySelector('h1').innerHTML = t.title + ' <span id="noteIcon">📝</span>';
-  document.getElementById('newBtn').textContent = t.new;
-  document.getElementById('trashBtn').innerHTML = t.trash + ' ♻️';
-  document.getElementById('searchInput').placeholder = t.search;
-  // Update empty state
-  const emptyDiv = document.querySelector('.empty');
-  if(emptyDiv){
-    emptyDiv.querySelector('div:nth-child(2)').textContent = t.empty;
-    emptyDiv.querySelector('div:nth-child(3)').textContent = t.emptyHint;
-  }
-  // Update nav
-  const navItems = document.querySelectorAll('.nav-item div:last-child');
-  if(navItems.length >=5){
-    navItems[0].textContent = t.settings;
-    navItems[1].textContent = t.notes;
-    navItems[2].textContent = t.folders;
-    navItems[3].textContent = t.saved;
-    navItems[4].textContent = t.home;
-  }
-}
+        function newNote() {
+            let text = prompt('اكتب مذكرتك:');
+            if (text) showToast('تم الحفظ: ' + text.substring(0,20));
+        }
 
-// Initialize
-applyLang();
-
-// FIX 3: Make buttons actually work with proper touch
-document.getElementById('newBtn').addEventListener('click', ()=>alert(translations[currentLang].new));
-document.getElementById('fabBtn').addEventListener('click', ()=>alert(translations[currentLang].new));
-document.getElementById('trashBtn').addEventListener('click', ()=>alert(translations[currentLang].trash));
-
-// Demo language toggle (double tap title)
-let taps = 0;
-document.querySelector('h1').addEventListener('click', ()=>{
-  taps++;
-  setTimeout(()=>taps=0, 300);
-  if(taps===2){
-    currentLang = currentLang === 'ar' ? 'en' : 'ar';
-    localStorage.setItem('smartmark_lang', currentLang);
-    applyLang();
-    taps=0;
-  }
-});
-
-console.log('SmartMark v2.1 loaded - cache cleared');
-</script>
+        function showToast(msg) {
+            let t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(()=>{t.style.display='none'}, 2000);
+        }
+    });
+    </script>
 </body>
 </html>

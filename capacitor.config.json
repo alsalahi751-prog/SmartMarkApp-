@@ -1,6 +1,6 @@
 {
-  "appId": "com.smartmark.app",
-  "appName": "SmartMark",
+  "appId": "com.smartmark.app21"
+  "appName": "SmartMark v2.1"
   "webDir": "www",
   "android": {
     "minSdkVersion": 24

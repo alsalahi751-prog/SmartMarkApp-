@@ -4,29 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
-<title>SmartMark v2.3</title>
+<title>SmartMark v2.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
-body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
+body{background:#0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 .header{display:flex;justify-content:space-between;align-items:center;padding:20px}
 .title{font-size:26px;font-weight:bold}
 .btn-add{background:#6366f1;border:none;padding:10px 18px;border-radius:12px;color:#fff;font-size:15px;cursor:pointer}
-.trash{background:#1f1f2e;border:none;padding:10px 16px;border-radius:12px;color:#ccc;margin:0 20px;display:flex;align-items:center;gap:6px;cursor:pointer}
 .search{margin:15px 20px;background:#1a1a2a;border:none;border-radius:12px;padding:13px;width:calc(100% - 40px);color:#fff;font-size:15px}
 .page{display:none;padding:0 10px}
 .page.active{display:block}
 .empty{text-align:center;margin-top:70px}
 .empty .icon{font-size:80px;opacity:.6;margin-bottom:15px}
-.note{background:#1a1a2a;margin:12px 10px;padding:14px;border-radius:12px;cursor:pointer}
-.note h4{margin-bottom:6px;font-size:16px}
-.note p{color:#999;font-size:13px}
-.note small{color:#666}
+.item{background:#1a2a;margin:12px 10px;padding:14px;border-radius:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.item div{flex:1}
+.item h4{margin-bottom:6px;font-size:16px}
+.item p{color:#999;font-size:13px}
+.item small{color:#666}
+.item .act{color:#ef4444;padding:8px}
 .fab{position:fixed;bottom:90px;left:20px;width:58px;height:58px;background:#6366f1;border-radius:16px;border:none;color:#fff;font-size:30px;cursor:pointer;box-shadow:0 4px 12px rgba(99,102,241,.4);z-index:10}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#14141f;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #2a2a3a}
 .nav-item{text-align:center;font-size:12px;color:#666;cursor:pointer;padding:4px 8px}
 .nav-item.active{color:#6366f1}
 .nav-item span{font-size:22px;display:block;margin-bottom:3px}
 #toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:10px 20px;border-radius:8px;display:none;z-index:999}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-box{background:#14141f;width:100%;max-width:360px;border-radius:16px;padding:20px}
+.modal-box h3{margin-bottom:15px}
+.modal-box textarea,.modal-box input{width:100%;background:#0a0a14;border:1px solid #2a2a3a;color:#fff;padding:12px;border-radius:10px;font-size:15px;min-height:100px}
+.modal-box input{min-height:auto}
+.modal-actions{display:flex;gap:10px;margin-top:15px}
+.modal-actions button{flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;cursor:pointer}
+.btn-p{background:#6366f1;color:#fff}
+.btn-s{background:#2a3a;color:#ccc}
+.trash-bar{display:flex;gap:10px;margin:15px 20px}
+.trash-bar button{flex:1;padding:10px;border:none;border-radius:10px;background:#1f1f2e;color:#ccc}
 </style>
 </head>
 <body>
@@ -37,35 +49,31 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
   <div class="title" id="appTitle">📝 مذكراتي</div>
 </div>
 
-<!-- صفحات -->
 <div id="page-notes" class="page active">
-  <button class="trash" id="btnTrash">♻️ سلة المحذوفات</button>
   <input type="text" id="search" class="search" placeholder="ابحث في المذكرات...">
   <div id="notesList"></div>
-  <div id="emptyNotes" class="empty">
-    <div class="icon">📝</div>
-    <h3>لا توجد مذكرات</h3>
-    <p>اضغط + لإضافة مذكرة جديدة</p>
-  </div>
+  <div id="emptyNotes" class="empty"><div class="icon">📝</div><h3>لا توجد مذكرات</h3><p>اضغط + لإضافة مذكرة</p></div>
 </div>
 
-<div id="page-home" class="page">
-  <div class="empty"><div class="icon">🏠</div><h3>الرئيسية</h3><p>مرحبا بك في SmartMark</p></div>
-</div>
-
-<div id="page-saved" class="page">
-  <div class="empty"><div class="icon">📌</div><h3>المحفوظات</h3><p>لا توجد عناصر محفوظة</p></div>
-</div>
+<div id="page-home" class="page"><div class="empty"><div class="icon">🏠</div><h3>الرئيسية</h3></div></div>
+<div id="page-saved" class="page"><div class="empty"><div class="icon">📌</div><h3>المحفوظات</h3></div></div>
 
 <div id="page-folders" class="page">
-  <div class="empty"><div class="icon">📁</div><h3>مجلدات</h3><p>قريبا</p></div>
+  <div id="foldersList"></div>
+  <div id="emptyFolders" class="empty"><div class="icon">📁</div><h3>لا توجد مجلدات</h3><p>اضغط + لإضافة مجلد</p></div>
+</div>
+
+<div id="page-trash" class="page">
+  <div class="trash-bar"><button id="emptyTrash">إفراغ السلة</button></div>
+  <div id="trashList"></div>
+  <div id="emptyTrashMsg" class="empty"><div class="icon">♻️</div><h3>سلة فارغة</h3></div>
 </div>
 
 <div id="page-settings" class="page">
   <div style="padding:20px">
     <h3 style="margin-bottom:15px">الإعدادات</h3>
-    <button id="clearAll" style="background:#ef4444;border:none;padding:12px 18px;border-radius:10px;color:#fff;width:100%;margin-bottom:10px">مسح كل البيانات</button>
-    <button id="langToggle" style="background:#2a2a3a;border:none;padding:12px 18px;border-radius:10px;color:#fff;width:100%">تبديل اللغة</button>
+    <button id="clearAll" style="background:#ef4444;border:none;padding:14px;border-radius:10px;color:#fff;width:100%;margin-bottom:12px">مسح كل البيانات</button>
+    <button id="langToggle" style="background:#2a3a;border:none;padding:14px;border-radius:10px;color:#fff;width:100%">تبديل اللغة</button>
   </div>
 </div>
 
@@ -73,63 +81,68 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 
 <div class="bottom-nav">
   <div class="nav-item" data-page="home"><span>🏠</span>الرئيسية</div>
-  <div class="nav-item" data-page="saved"><span>📌</span>المحفوظات</div>
+  <div class="nav-item" data-page="saved"><span>📌</span>محفوظات</div>
   <div class="nav-item" data-page="folders"><span>📁</span>مجلدات</div>
   <div class="nav-item active" data-page="notes"><span>📝</span>مذكرات</div>
-  <div class="nav-item" data-page="settings"><span>⚙️</span>الإعدادات</div>
+  <div class="nav-item" data-page="settings"><span>⚙️</span>إعدادات</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3 id="modalTitle">إضافة</h3>
+    <textarea id="modalInput" placeholder="اكتب هنا..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-s" id="modalCancel">إلغاء</button>
+      <button class="btn-p" id="modalSave">حفظ</button>
+    </div>
+  </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-  const notesKey='sm_notes_v23', trashKey='sm_trash_v23';
-  let notes=JSON.parse(localStorage.getItem(notesKey)||'[]');
-  let trash=JSON.parse(localStorage.getItem(trashKey)||'[]');
+  const NK='sm_notes_v24', FK='sm_folders_v24', TK='sm_trash_v24';
+  let notes=JSON.parse(localStorage.getItem(NK)||'[]');
+  let folders=JSON.parse(localStorage.getItem(FK)||'[]');
+  let trash=JSON.parse(localStorage.getItem(TK)||'[]');
+  let currentPage='notes', modalMode='note';
 
-  function save(){ localStorage.setItem(notesKey,JSON.stringify(notes)); localStorage.setItem(trashKey,JSON.stringify(trash)); }
-  function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1800); }
+  const save=()=>{localStorage.setItem(NK,JSON.stringify(notes));localStorage.setItem(FK,JSON.stringify(folders));localStorage.setItem(TK,JSON.stringify(trash));};
+  const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',1700);};
 
-  function render(){
-    const list=document.getElementById('notesList');
-    const empty=document.getElementById('emptyNotes');
-    const q=document.getElementById('search').value.trim();
-    const filtered=notes.filter(n=>n.text.includes(q));
-    list.innerHTML='';
-    if(filtered.length===0){ empty.style.display='block'; return; }
-    empty.style.display='none';
-    filtered.slice().reverse().forEach(n=>{
-      const div=document.createElement('div'); div.className='note';
-      div.innerHTML=`<h4>${n.text.substring(0,30)}</h4><p>${n.text.substring(0,80)}</p><small>${new Date(n.date).toLocaleString('ar-EG')}</small>`;
-      div.onclick=()=>{ if(confirm('حذف هذه المذكرة؟')){ trash.push(n); notes=notes.filter(x=>x.id!==n.id); save(); render(); toast('تم النقل لسلة المحذوفات'); } };
-      list.appendChild(div);
-    });
+  function renderNotes(){
+    const q=document.getElementById('search').value||''; const list=document.getElementById('notesList'); const empty=document.getElementById('emptyNotes');
+    const f=notes.filter(n=>n.text.includes(q)); list.innerHTML=''; empty.style.display=f.length?'none':'block';
+    f.slice().reverse().forEach(n=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>${n.text.substring(0,30)}</h4><small>${new Date(n.date).toLocaleDateString('ar-EG')}</small></div><span class="act">حذف</span>`;d.onclick=()=>{trash.push(n);notes=notes.filter(x=>x.id!==n.id);save();renderNotes();renderTrash();toast('نُقلت للسلة');};list.appendChild(d);});
+  }
+  function renderFolders(){
+    const list=document.getElementById('foldersList'); const empty=document.getElementById('emptyFolders'); list.innerHTML=''; empty.style.display=folders.length?'none':'block';
+    folders.slice().reverse().forEach(f=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>📁 ${f.name}</h4><small>${new Date(f.date).toLocaleDateString('ar-EG')}</small></div>`;list.appendChild(d);});
+  }
+  function renderTrash(){
+    const list=document.getElementById('trashList'); const empty=document.getElementById('emptyTrashMsg'); list.innerHTML=''; empty.style.display=trash.length?'none':'block';
+    trash.slice().reverse().forEach(t=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>${t.text.substring(0,30)}</h4></div><span class="act">استعادة</span>`;d.onclick=()=>{notes.push(t);trash=trash.filter(x=>x.id!==t.id);save();renderNotes();renderTrash();toast('تمت الاستعادة');};list.appendChild(d);});
   }
 
-  function addNote(){
-    const txt=prompt('اكتب مذكرتك:');
-    if(txt && txt.trim()){ notes.push({id:Date.now(),text:txt.trim(),date:Date.now()}); save(); render(); toast('تم الحفظ'); }
-  }
+  function openModal(mode){modalMode=mode;document.getElementById('modalTitle').textContent=mode==='note'?'مذكرة جديدة':'مجلد جديد';document.getElementById('modalInput').placeholder=mode==='note'?'اكتب مذكرتك...':'اسم المجلد';document.getElementById('modalInput').value='';document.getElementById('modal').style.display='flex';document.getElementById('modalInput').focus();}
+  function closeModal(){document.getElementById('modal').style.display='none';}
 
-  document.getElementById('btnNew').onclick=addNote;
-  document.getElementById('fab').onclick=addNote;
-  document.getElementById('search').oninput=render;
-  document.getElementById('btnTrash').onclick=()=>{ toast('المحذوفات: '+trash.length); };
+  document.getElementById('modalSave').onclick=()=>{const v=document.getElementById('modalInput').value.trim();if(!v)return;if(modalMode==='note'){notes.push({id:Date.now(),text:v,date:Date.now()});renderNotes();toast('تم حفظ المذكرة');}else{folders.push({id:Date.now(),name:v,date:Date.now()});renderFolders();toast('تم إنشاء المجلد');}save();closeModal();};
+  document.getElementById('modalCancel').onclick=closeModal;
 
-  document.querySelectorAll('.nav-item').forEach(el=>{
-    el.onclick=()=>{
-      document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
-      el.classList.add('active');
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-      document.getElementById('page-'+el.dataset.page).classList.add('active');
-    };
-  });
+  function addCurrent(){if(currentPage==='notes')openModal('note');else if(currentPage==='folders')openModal('folder');else if(currentPage==='trash'){document.querySelector('[data-page="notes"]').click();}else toast('اذهب للمذكرات أو المجلدات');}
+  document.getElementById('btnNew').onclick=addCurrent; document.getElementById('fab').onclick=addCurrent;
+  document.getElementById('search').oninput=renderNotes;
 
-  document.getElementById('clearAll').onclick=()=>{ if(confirm('مسح كل شيء؟')){ localStorage.clear(); notes=[]; trash=[]; render(); toast('تم المسح'); } };
-  document.getElementById('langToggle').onclick=()=>{ const t=document.getElementById('appTitle'); t.textContent=t.textContent.includes('مذكراتي')?'📝 My Notes':'📝 مذكراتي'; };
+  document.querySelectorAll('.nav-item').forEach(el=>{el.onclick=()=>{document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));currentPage=el.dataset.page;document.getElementById('page-'+currentPage).classList.add('active');document.getElementById('btnNew').textContent=currentPage==='folders'?'+ مجلد':'+ جديد';};});
 
-  // تنظيف مرة واحدة من البيانات القديمة
-  if(!localStorage.getItem('v23_init')){ localStorage.setItem('v23_init','1'); }
+  // زر سلة المحذوفات من داخل المذكرات
+  const trashBtn=document.createElement('button');trashBtn.textContent='♻️ سلة المحذوفات';trashBtn.style.cssText='margin:0 20px 10px;background:#1f1f2e;border:none;padding:10px 16px;border-radius:12px;color:#ccc;width:calc(100% - 40px)';trashBtn.onclick=()=>{document.querySelector('[data-page="notes"]').classList.remove('active');document.getElementById('page-notes').classList.remove('active');document.getElementById('page-trash').classList.add('active');currentPage='trash';};document.getElementById('page-notes').insertBefore(trashBtn,document.getElementById('search'));
 
-  render();
+  document.getElementById('emptyTrash').onclick=()=>{if(confirm('إفراغ السلة نهائيا؟')){trash=[];save();renderTrash();toast('تم الإفراغ');}};
+  document.getElementById('clearAll').onclick=()=>{if(confirm('مسح كل البيانات؟')){localStorage.clear();notes=[];folders=[];trash=[];save();renderNotes();renderFolders();renderTrash();toast('تم مسح كل شيء');}};
+  document.getElementById('langToggle').onclick=()=>{const t=document.getElementById('appTitle');t.textContent=t.textContent.includes('مذكراتي')?'📝 My Notes':'📝 مذكراتي';};
+
+  renderNotes();renderFolders();renderTrash();
 });
 </script>
 </body>

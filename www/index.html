@@ -1,172 +1,213 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
-<title>SmartMark</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data:;">
+<title>SmartMark Pro</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
-body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
-.header{display:flex;justify-content:space-between;align-items:center;padding:20px}
-.header-left{display:flex;gap:8px}
-.title{font-size:26px;font-weight:bold}
-.btn{border:none;padding:10px 16px;border-radius:12px;color:#fff;font-size:14px;cursor:pointer}
-.btn-primary{background:#6366f1}
-.btn-dark{background:#1a1a2a}
-.search{margin:15px 20px;background:#1a1a2a;border:none;border-radius:12px;padding:13px;width:calc(100% - 40px);color:#fff;font-size:15px}
-.page{display:none;padding:0 10px}
-.page.active{display:block}
-.empty{text-align:center;margin-top:70px}
-.empty .icon{font-size:80px;opacity:.6;margin-bottom:15px}
-.item{background:#1a1a2a;margin:12px 10px;padding:14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px}
-.item .check{width:22px;height:22px;border:2px solid #555;border-radius:6px;display:none;align-items:center;justify-content:center}
-.item.selected .check{background:#6366f1;border-color:#6366f1}
-.item.selected .check::after{content:'✓';font-size:14px}
-.item-content{flex:1}
-.item h4{margin-bottom:6px;font-size:16px}
-.item p{color:#999;font-size:13px;word-break:break-word}
-.item small{color:#666}
-.select-bar{position:fixed;bottom:70px;left:0;right:0;background:#14141f;padding:12px;display:none;justify-content:space-around;border-top:1px solid #2a2a3a;z-index:20}
-.select-bar button{background:none;border:none;color:#ccc;font-size:13px}
-.select-bar button.primary{color:#6366f1}
-.fab{position:fixed;bottom:90px;left:20px;width:58px;height:58px;background:#6366f1;border-radius:16px;border:none;color:#fff;font-size:30px;cursor:pointer;box-shadow:0 4px 12px rgba(99,102,241,.4);z-index:10}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#14141f;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #2a2a3a}
-.nav-item{text-align:center;font-size:12px;color:#666;cursor:pointer;padding:4px 8px}
-.nav-item.active{color:#6366f1}
-.nav-item span{font-size:22px;display:block;margin-bottom:3px}
-#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:10px 20px;border-radius:8px;display:none;z-index:999}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-.modal-box{background:#14141f;width:100%;max-width:380px;border-radius:16px;padding:20px}
-.modal-box h3{margin-bottom:15px}
-.modal-box textarea,.modal-box input{width:100%;background:#0a0a14;border:1px solid #2a2a3a;color:#fff;padding:12px;border-radius:10px;font-size:15px;margin-bottom:10px}
-.modal-box textarea{min-height:120px}
-.modal-actions{display:flex;gap:10px}
-.modal-actions button{flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;cursor:pointer}
+body{background:#050508;color:#e2e2e2;min-height:100vh;padding-bottom:85px}
+.page{display:none}.page.active{display:block}
+.header-home{padding:28px 20px 10px;text-align:center}
+.header-home h1{font-size:34px;font-weight:800;background:linear-gradient(90deg,#fff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-home p{color:#888;margin-top:4px;font-size:14px}
+.search-wrap{margin:18px 20px;background:#12121c;border-radius:14px;padding:12px 16px;display:flex;align-items:center}
+.search-wrap input{flex:1;background:none;border:none;color:#fff;font-size:15px;outline:none}
+.chips{display:flex;gap:10px;padding:0 20px;margin-bottom:16px}
+.chip{background:#1a1a24;padding:8px 14px;border-radius:20px;font-size:13px;color:#aaa}
+.chip.active{background:#2a2a3a;color:#fff}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px;margin-bottom:18px}
+.stat{background:#12121c;border-radius:16px;padding:18px;text-align:center}
+.stat.num{font-size:28px;font-weight:700}.stat.num.orange{color:#f59e0b}.stat.num.purple{color:#8b5cf6}
+.stat.lbl{color:#777;font-size:13px;margin-top:4px}
+.cards{padding:0 20px;display:flex;flex-direction:column;gap:14px}
+.card{background:#12121c;border-radius:18px;overflow:hidden}
+.card-img{height:140px;display:flex;align-items:center;justify-content:center;font-size:48px}
+.card-img.mountain{background:#3a2a2a}.card-img.food{background:#5a2a2a}
+.card-body{padding:14px}.card-body h4{font-size:15px;margin-bottom:6px}.card-body small{color:#666}
+.grid-folders{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px}
+.folder{background:#12121c;border-radius:18px;padding:22px 16px;text-align:center}
+.folder.ico{font-size:36px;margin-bottom:10px}.folder h4{font-size:15px}.folder p{color:#666;font-size:12px;margin-top:4px}
+.folder.add{border:2px dashed #2a2a3a;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px}
+.folder.add.plus{font-size:32px;color:#555}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 20px}
+.topbar h2{font-size:20px;display:flex;align-items:center;gap:8px}
+.topbar.actions{display:flex;gap:12px;color:#8b5cf6;font-size:14px}
+.settings-wrap{padding:16px}
+.set-card{background:#12121c;border-radius:16px;padding:16px;margin-bottom:14px}
+.set-card h3{font-size:15px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.set-card p{color:#777;font-size:12px}
+.btn{border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-green{background:#10b981;color:#fff}.btn-purple{background:#6366f1;color:#fff}.btn-red{background:#ef4444;color:#fff}
+.switch{position:relative;width:44px;height:26px;background:#2a2a3a;border-radius:13px;cursor:pointer}
+.switch.on{background:#6366f1}.switch::after{content:'';position:absolute;top:3px;right:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s}
+.switch.on::after{right:21px}
+.user-card{background:#12121c;border-radius:16px;padding:18px;text-align:center;margin-bottom:16px}
+.user-card.pro{background:#f59e0b;color:#000;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;display:inline-block;margin-top:8px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0a0a0f;display:flex;justify-content:space-around;padding:10px 0 14px;border-top:1px solid #1a1a24}
+.nav-item{text-align:center;font-size:11px;color:#555;cursor:pointer}
+.nav-item.active{color:#a78bfa}.nav-item span{font-size:22px;display:block;margin-bottom:3px}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:8px;display:none;z-index:999}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal-box{background:#12121c;width:100%;max-width:380px;border-radius:18px;padding:20px}
+.modal-box textarea,.modal-box input{width:100%;background:#050508;border:1px solid #2a2a3a;color:#fff;padding:12px;border-radius:12px;margin-bottom:10px;font-size:15px}
+.modal-box textarea{min-height:110px}
+.modal-actions{display:flex;gap:10px}.modal-actions button{flex:1;padding:12px;border:none;border-radius:12px;font-weight:600}
+.select-bar{position:fixed;bottom:75px;left:0;right:0;background:#12121c;padding:12px;display:none;justify-content:space-around;border-top:1px solid #2a2a3a}
 </style>
 </head>
 <body>
 <div id="toast"></div>
 
-<div class="header">
-  <div class="header-left">
-    <button class="btn btn-primary" id="btnNew">+ جديد</button>
-    <button class="btn btn-dark" id="btnSelect">تحديد</button>
+<!-- الرئيسية -->
+<div id="page-home" class="page active">
+  <div class="header-home">
+    <h1>SmartMark</h1>
+    <p id="totalCount">12 عنصر محفوظ</p>
   </div>
-  <div class="title">📝 مذكراتي</div>
+  <div class="search-wrap"><input id="search" placeholder="ابحث في محفوظاتك..."><span>🔍</span></div>
+  <div class="chips">
+    <div class="chip active">المفضلة ⭐</div>
+    <div class="chip">فيديو 🎬</div>
+    <div class="chip">صور 🖼️</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="num orange" id="favCount">6</div><div class="lbl">مفضلة</div></div>
+    <div class="stat"><div class="num purple" id="allCount">12</div><div class="lbl">إجمالي</div></div>
+  </div>
+  <div class="cards" id="homeCards"></div>
 </div>
 
-<div id="page-notes" class="page active">
-  <input type="text" id="search" class="search" placeholder="ابحث في المذكرات...">
-  <div id="notesList"></div>
-  <div id="emptyNotes" class="empty"><div class="icon">📝</div><h3>لا توجد مذكرات</h3></div>
-</div>
-
+<!-- مجلدات -->
 <div id="page-folders" class="page">
-  <div id="foldersList"></div>
-  <div id="emptyFolders" class="empty"><div class="icon">📁</div><h3>لا توجد مجلدات</h3></div>
+  <div class="topbar"><h2>📁 المجلدات</h2><div class="actions"><span id="newFolderTop">+ جديد</span></div></div>
+  <div class="grid-folders" id="foldersGrid"></div>
 </div>
 
+<!-- مذكرة -->
+<div id="page-notes" class="page">
+  <div class="topbar"><h2>📝 مذكرة</h2><div class="actions"><span id="btnSelect">تحديد</span></div></div>
+  <div style="padding:0 20px"><div id="notesList"></div></div>
+</div>
+
+<!-- محفوظات -->
+<div id="page-saved" class="page"><div class="topbar"><h2>🔖 المحفوظات</h2></div><div style="padding:20px;color:#777;text-align:center;margin-top:60px">لا توجد عناصر</div></div>
+
+<!-- اعدادات -->
 <div id="page-settings" class="page">
-  <div style="padding:20px">
-    <h3 style="margin-bottom:15px">الإعدادات</h3>
-    <button id="exportBtn" style="background:#1a1a2a;border:none;padding:14px;border-radius:12px;color:#fff;width:100%;margin-bottom:12px;text-align:right">📤 تصدير المذكرات</button>
-    <button id="backupBtn" style="background:#1a1a2a;border:none;padding:14px;border-radius:12px;color:#fff;width:100%;margin-bottom:12px;text-align:right">💾 نسخة احتياطية</button>
-    <button id="clearAll" style="background:#ef4444;border:none;padding:14px;border-radius:12px;color:#fff;width:100%;margin-bottom:12px">مسح كل البيانات</button>
+  <div class="topbar"><h2>⚙️ الإعدادات</h2></div>
+  <div class="settings-wrap">
+    <div class="user-card"><h3>مستخدم</h3><p style="color:#6366f1;font-size:13px">user@smartmark.app</p><span class="pro">Pro ✨</span></div>
+
+    <div class="set-card"><h3>قفل التطبيق <div class="switch" id="lockSwitch"></div></h3><p>حماية بـ PIN</p></div>
+
+    <div class="set-card"><h3>تصدير البيانات <button class="btn btn-green" id="exportBtn">تصدير</button></h3><p>حفظ نسخة احتياطية</p></div>
+    <div class="set-card"><h3>استيراد البيانات <button class="btn btn-purple" id="importBtn">استيراد</button></h3><p>استعادة نسخة احتياطية</p></div>
+
+    <div class="set-card"><h3>مزامنة تلقائية <div class="switch on" id="syncSwitch"></div></h3><p>يتزامن كل 30 دقيقة</p></div>
+    <div class="set-card"><h3>Wi-Fi فقط <div class="switch" id="wifiSwitch"></div></h3><p>لا يستهلك بيانات الجوال</p></div>
+    <div class="set-card"><h3>مسح ذاكرة التخزين <button class="btn btn-red" id="clearBtn">مسح</button></h3><p>24 ميغابايت مستخدمة</p></div>
+
+    <div class="set-card"><h3>الوضع الداكن <div class="switch on"></div></h3><p>تشغيل مفعل حالياً</p></div>
+    <div class="set-card"><h3>اللون الأساسي <div style="width:24px;height:24px;background:#6366f1;border-radius:6px"></div></h3><p>Indigo – بنفسجي</p></div>
+
+    <div class="set-card"><h3>العربية 🇸🇦</h3></div>
+    <div class="set-card"><h3>English 🇺🇸</h3></div>
   </div>
 </div>
-
-<div id="page-home" class="page"><div class="empty"><div class="icon">🏠</div><h3>الرئيسية</h3></div></div>
-<div id="page-saved" class="page"><div class="empty"><div class="icon">📌</div><h3>المحفوظات</h3></div></div>
-<div id="page-trash" class="page"><div class="empty"><div class="icon">♻️</div><h3>سلة المحذوفات</h3></div></div>
 
 <div class="select-bar" id="selectBar">
-  <button id="selCopy">نسخ</button>
-  <button id="selDelete" style="color:#ef4444">حذف</button>
-  <button id="selAll" class="primary">تحديد الكل</button>
-  <button id="selCancel">إلغاء</button>
+  <span id="copySel">نسخ</span><span id="delSel" style="color:#ef4444">حذف</span><span id="allSel">تحديد الكل</span><span id="cancelSel">إلغاء</span>
 </div>
-
-<button class="fab" id="fab">+</button>
 
 <div class="bottom-nav">
-  <div class="nav-item" data-page="home"><span>🏠</span>الرئيسية</div>
-  <div class="nav-item" data-page="saved"><span>📌</span>محفوظات</div>
-  <div class="nav-item active" data-page="folders"><span>📁</span>مجلدات</div>
-  <div class="nav-item active" data-page="notes"><span>📝</span>مذكرات</div>
-  <div class="nav-item" data-page="settings"><span>⚙️</span>إعدادات</div>
+  <div class="nav-item active" data-page="home"><span>🏠</span>الرئيسية</div>
+  <div class="nav-item" data-page="saved"><span>🔖</span>المحفوظات</div>
+  <div class="nav-item" data-page="folders"><span>📁</span>مجلدات</div>
+  <div class="nav-item" data-page="notes"><span>📝</span>مذكرة</div>
 </div>
 
-<div class="modal" id="modal">
+<div class="modal" id="noteModal">
   <div class="modal-box">
-    <h3>مذكرة جديدة</h3>
+    <h3 style="margin-bottom:12px">مذكرة جديدة</h3>
     <textarea id="noteText" placeholder="اكتب مذكرتك..."></textarea>
     <input id="noteLink" placeholder="إضافة رابط محتوى (اختياري)">
     <div class="modal-actions">
-      <button class="btn-dark" id="modalCancel" style="background:#2a2a3a;color:#ccc">إلغاء</button>
-      <button class="btn-primary" id="modalSave">حفظ</button>
+      <button style="background:#2a2a3a;color:#ccc" onclick="closeModal()">إلغاء</button>
+      <button style="background:#6366f1;color:#fff" id="saveNote">حفظ</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="exportModal">
   <div class="modal-box">
-    <h3 id="exportTitle">تصدير</h3>
-    <textarea id="exportText" style="height:220px"></textarea>
+    <h3>نسخ البيانات</h3>
+    <textarea id="exportData" style="height:200px"></textarea>
     <div class="modal-actions">
-      <button class="btn-dark" id="closeExport" style="background:#2a2a3a">إغلاق</button>
-      <button class="btn-primary" id="copyExport">نسخ الكل</button>
+      <button style="background:#6366f1;color:#fff" id="copyData">نسخ الكل</button>
     </div>
   </div>
 </div>
 
+<input type="file" id="fileInput" accept=".json" hidden>
+
 <script>
-const NK='sm_notes', FK='sm_folders';
-let notes=JSON.parse(localStorage.getItem(NK)||'[]');
-let folders=JSON.parse(localStorage.getItem(FK)||'[]');
-let selectMode=false, selected=new Set();
+let notes=JSON.parse(localStorage.getItem('sm_notes')||'[{"id":1,"text":"رحلة مذهلة في جبال الألب السويسرية","link":"","date":"2024-01-15","fav":true,"type":"image"},{"id":2,"text":"وصفة رامن ياباني","link":"https://example.com","date":"2024-01-14","fav":false,"type":"video"}]');
+let folders=JSON.parse(localStorage.getItem('sm_folders')||'[{"name":"تقنية","icon":"💻"},{"name":"سفر","icon":"✈️"},{"name":"تطوير ذات","icon":"📚"},{"name":"طعام","icon":"🍜"}]');
+let selectMode=false,selected=new Set();
 
-const save=()=>{localStorage.setItem(NK,JSON.stringify(notes));localStorage.setItem(FK,JSON.stringify(folders));};
-const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',1600);};
+const save=()=>{localStorage.setItem('sm_notes',JSON.stringify(notes));localStorage.setItem('sm_folders',JSON.stringify(folders));updateCounts();};
+const toast=m=>{document.getElementById('toast').textContent=m;document.getElementById('toast').style.display='block';setTimeout(()=>document.getElementById('toast').style.display='none',1500);};
+const updateCounts=()=>{document.getElementById('allCount').textContent=notes.length;document.getElementById('favCount').textContent=notes.filter(n=>n.fav).length;document.getElementById('totalCount').textContent=notes.length+' عنصر محفوظ';};
 
-function renderNotes(){
-  const q=document.getElementById('search').value||''; const list=document.getElementById('notesList');
-  const f=notes.filter(n=>n.text.includes(q)||(n.link||'').includes(q));
-  list.innerHTML=''; document.getElementById('emptyNotes').style.display=f.length?'none':'block';
-  f.slice().reverse().forEach(n=>{
-    const d=document.createElement('div'); d.className='item'+(selected.has(n.id)?' selected':''); d.dataset.id=n.id;
-    d.innerHTML=`<div class="check"></div><div class="item-content"><h4>${n.text.substring(0,40)}</h4>${n.link?`<p style="color:#6366f1">${n.link}</p>`:''}<small>${new Date(n.date).toLocaleDateString('ar-EG')}</small></div>`;
-    d.onclick=()=>{if(selectMode){toggleSelect(n.id)}else{}};
-    list.appendChild(d);
+function renderHome(){
+  const wrap=document.getElementById('homeCards');wrap.innerHTML='';
+  notes.slice(0,4).forEach(n=>{
+    const d=document.createElement('div');d.className='card';
+    d.innerHTML=`<div class="card-img ${n.type==='image'?'mountain':'food'}">${n.type==='image'?'🏔️':'🍜'}</div><div class="card-body"><h4>${n.text}</h4><small>${n.date}</small></div>`;
+    wrap.appendChild(d);
   });
-  document.querySelectorAll('.check').forEach(c=>c.style.display=selectMode?'flex':'none');
 }
-function toggleSelect(id){selected.has(id)?selected.delete(id):selected.add(id);renderNotes();}
+function renderFolders(){
+  const g=document.getElementById('foldersGrid');g.innerHTML='';
+  folders.forEach(f=>{g.innerHTML+=`<div class="folder"><div class="ico">${f.icon}</div><h4>${f.name}</h4><p>0 عناصر</p></div>`;});
+  g.innerHTML+=`<div class="folder add" id="addFolder"><div class="plus">+</div><p>مجلد جديد</p></div>`;
+  document.getElementById('addFolder').onclick=()=>{const n=prompt('اسم المجلد:');if(n){folders.push({name:n,icon:'📁'});save();renderFolders();}};
+}
+function renderNotes(){
+  const l=document.getElementById('notesList');l.innerHTML='';
+  notes.forEach(n=>{
+    const d=document.createElement('div');d.style.cssText='background:#12121c;padding:14px;border-radius:14px;margin-bottom:10px;display:flex;align-items:center;gap:10px';
+    d.innerHTML=`${selectMode?`<input type="checkbox" ${selected.has(n.id)?'checked':''} data-id="${n.id}">`:''}<div style="flex:1"><div>${n.text}</div>${n.link?`<div style="color:#6366f1;font-size:12px;margin-top:4px">${n.link}</div>`:''}</div>`;
+    l.appendChild(d);
+  });
+  document.querySelectorAll('#notesList input').forEach(cb=>cb.onchange=e=>{const id=Number(e.target.dataset.id);e.target.checked?selected.add(id):selected.delete(id);});
+}
 
-document.getElementById('btnSelect').onclick=()=>{selectMode=!selectMode;selected.clear();document.getElementById('selectBar').style.display=selectMode?'flex':'none';document.getElementById('btnSelect').textContent=selectMode?'تم': 'تحديد';renderNotes();};
-document.getElementById('selCancel').onclick=()=>document.getElementById('btnSelect').click();
-document.getElementById('selAll').onclick=()=>{notes.forEach(n=>selected.add(n.id));renderNotes();};
-document.getElementById('selDelete').onclick=()=>{if(selected.size===0)return;if(confirm('حذف '+selected.size+' مذكرة؟')){notes=notes.filter(n=>!selected.has(n.id));save();selected.clear();document.getElementById('btnSelect').click();renderNotes();toast('تم الحذف');}};
-document.getElementById('selCopy').onclick=()=>{const txt=notes.filter(n=>selected.has(n.id)).map(n=>n.text+(n.link?'\n'+n.link:'')).join('\n\n---\n\n');navigator.clipboard.writeText(txt);toast('تم نسخ '+selected.size);};
+document.querySelectorAll('.nav-item').forEach(it=>it.onclick=()=>{document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));it.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+it.dataset.page).classList.add('active');});
 
-function renderFolders(){const list=document.getElementById('foldersList');list.innerHTML='';document.getElementById('emptyFolders').style.display=folders.length?'none':'block';folders.forEach(f=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div class="item-content"><h4>📁 ${f.name}</h4></div>`;list.appendChild(d);});}
+document.getElementById('newFolderTop').onclick=()=>document.getElementById('addFolder')?.click();
+document.getElementById('btnSelect').onclick=()=>{selectMode=!selectMode;selected.clear();document.getElementById('selectBar').style.display=selectMode?'flex':'none';document.getElementById('btnSelect').textContent=selectMode?'تم':'تحديد';renderNotes();};
+document.getElementById('cancelSel').onclick=()=>document.getElementById('btnSelect').click();
+document.getElementById('allSel').onclick=()=>{notes.forEach(n=>selected.add(n.id));renderNotes();};
+document.getElementById('delSel').onclick=()=>{if(selected.size&&confirm('حذف؟')){notes=notes.filter(n=>!selected.has(n.id));save();selectMode=false;document.getElementById('selectBar').style.display='none';renderNotes();renderHome();}};
+document.getElementById('copySel').onclick=()=>{const txt=notes.filter(n=>selected.has(n.id)).map(n=>n.text+(n.link?'\n'+n.link:'')).join('\n\n');navigator.clipboard.writeText(txt);toast('تم النسخ');};
 
-document.getElementById('btnNew').onclick=openModal;
-document.getElementById('fab').onclick=()=>{if(document.getElementById('page-folders').classList.contains('active')){const name=prompt('اسم المجلد:');if(name){folders.push({id:Date.now(),name});save();renderFolders();}}else{openModal();}};
-function openModal(){document.getElementById('noteText').value='';document.getElementById('noteLink').value='';document.getElementById('modal').style.display='flex';}
-document.getElementById('modalCancel').onclick=()=>document.getElementById('modal').style.display='none';
-document.getElementById('modalSave').onclick=()=>{const t=document.getElementById('noteText').value.trim();if(!t)return;const l=document.getElementById('noteLink').value.trim();notes.push({id:Date.now(),text:t,link:l||null,date:Date.now()});save();renderNotes();document.getElementById('modal').style.display='none';toast('تم الحفظ');};
+function openModal(){document.getElementById('noteModal').style.display='flex';}
+function closeModal(){document.getElementById('noteModal').style.display='none';}
+document.getElementById('saveNote').onclick=()=>{const t=document.getElementById('noteText').value.trim();if(!t)return;notes.unshift({id:Date.now(),text:t,link:document.getElementById('noteLink').value.trim(),date:new Date().toISOString().split('T')[0],fav:false,type:'text'});save();closeModal();renderHome();renderNotes();toast('تم الحفظ');document.getElementById('noteText').value='';document.getElementById('noteLink').value='';};
+document.querySelector('.header-home').ondblclick=openModal;
 
-document.getElementById('search').oninput=renderNotes;
-document.querySelectorAll('.nav-item').forEach(el=>{el.onclick=()=>{document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+el.dataset.page).classList.add('active');};});
+document.getElementById('exportBtn').onclick=()=>{document.getElementById('exportData').value=JSON.stringify({notes,folders},null,2);document.getElementById('exportModal').style.display='flex';};
+document.getElementById('copyData').onclick=()=>{navigator.clipboard.writeText(document.getElementById('exportData').value);toast('تم النسخ - الصقه في واتساب');document.getElementById('exportModal').style.display='none';};
+document.getElementById('importBtn').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);notes=d.notes||notes;folders=d.folders||folders;save();renderHome();renderFolders();renderNotes();toast('تم الاستيراد');}catch{toast('ملف غير صالح')}};r.readAsText(f);};
+document.getElementById('clearBtn').onclick=()=>{if(confirm('مسح؟')){localStorage.clear();notes=[];folders=[];save();renderHome();}};
+document.getElementById('lockSwitch').onclick=e=>e.target.classList.toggle('on');
+document.getElementById('syncSwitch').onclick=e=>e.target.classList.toggle('on');
+document.getElementById('wifiSwitch').onclick=e=>e.target.classList.toggle('on');
 
-document.getElementById('exportBtn').onclick=()=>{const txt=notes.map(n=>`[${new Date(n.date).toLocaleString('ar-EG')}]\n${n.text}${n.link?'\nرابط: '+n.link:''}`).join('\n\n---\n\n');document.getElementById('exportTitle').textContent='تصدير المذكرات';document.getElementById('exportText').value=txt;document.getElementById('exportModal').style.display='flex';};
-document.getElementById('backupBtn').onclick=()=>{const data=JSON.stringify({notes,folders},null,2);document.getElementById('exportTitle').textContent='نسخة احتياطية';document.getElementById('exportText').value=data;document.getElementById('exportModal').style.display='flex';};
-document.getElementById('copyExport').onclick=()=>{navigator.clipboard.writeText(document.getElementById('exportText').value);toast('تم النسخ - الصقه في واتساب');};
-document.getElementById('closeExport').onclick=()=>document.getElementById('exportModal').style.display='none';
-document.getElementById('clearAll').onclick=()=>{if(confirm('مسح كل شيء؟')){localStorage.clear();notes=[];folders=[];save();renderNotes();renderFolders();}};
-
-renderNotes();renderFolders();
+renderHome();renderFolders();renderNotes();updateCounts();
 </script>
 </body>
 </html>

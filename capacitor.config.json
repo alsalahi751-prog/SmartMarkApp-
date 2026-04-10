@@ -1,16 +1,8 @@
 {
-  "appId": "com.smartmark.app21"
-  "appName": "SmartMark v2.1"
+  "appId": "com.smartmark.app",
+  "appName": "SmartMark",
   "webDir": "www",
-  "android": {
-    "minSdkVersion": 24
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 0,
-      "launchAutoHide": true,
-      "backgroundColor": "#0a0a14",
-      "showSpinner": false
-    }
+  "server": {
+    "androidScheme": "https"
   }
 }

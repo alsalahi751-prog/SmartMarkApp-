@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
-<title>SmartMark v2.5</title>
+<title>SmartMark v2.6</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
 body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
@@ -27,20 +27,29 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 .nav-item.active{color:#6366f1}
 .nav-item span{font-size:22px;display:block;margin-bottom:3px}
 #toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:10px 20px;border-radius:8px;display:none;z-index:999}
-.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-.modal-box{background:#14141f;width:100%;max-width:360px;border-radius:16px;padding:20px}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-box{background:#14141f;width:100%;max-width:380px;border-radius:16px;padding:20px}
 .modal-box h3{margin-bottom:15px}
-.modal-box textarea,.modal-box input{width:100%;background:#0a0a14;border:1px solid #2a2a3a;color:#fff;padding:12px;border-radius:10px;font-size:15px;min-height:100px}
-.modal-box input{min-height:auto}
-.modal-actions{display:flex;gap:10px;margin-top:15px}
+.modal-box textarea,.modal-box input,.modal-box select{width:100%;background:#0a0a14;border:1px solid #2a2a3a;color:#fff;padding:12px;border-radius:10px;font-size:15px;min-height:100px;margin-bottom:10px}
+.modal-box input,.modal-box select{min-height:auto}
+.modal-actions{display:flex;gap:10px;margin-top:10px}
 .modal-actions button{flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;cursor:pointer}
 .btn-p{background:#6366f1;color:#fff}
 .btn-s{background:#2a2a3a;color:#ccc}
-.trash-bar{display:flex;gap:10px;margin:15px 20px}
-.trash-bar button{flex:1;padding:10px;border:none;border-radius:10px;background:#1f1f2e;color:#ccc}
+.btn-g{background:#22c55e;color:#fff}
+.lock-screen{position:fixed;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200}
+.lock-screen input{width:200px;text-align:center;font-size:24px;letter-spacing:8px;margin:20px 0}
 </style>
 </head>
 <body>
+<div id="lockScreen" class="lock-screen" style="display:none">
+  <div style="font-size:60px;margin-bottom:20px">🔒</div>
+  <h2>SmartMark</h2>
+  <p style="color:#999;margin:10px 0">أدخل الرقم السري</p>
+  <input type="password" id="pinInput" maxlength="4" inputmode="numeric">
+  <button id="pinBtn" class="btn-p" style="padding:12px 30px;border:none;border-radius:10px">فتح</button>
+</div>
+
 <div id="toast"></div>
 
 <div class="header">
@@ -51,7 +60,7 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 <div id="page-notes" class="page active">
   <input type="text" id="search" class="search" placeholder="ابحث في المذكرات...">
   <div id="notesList"></div>
-  <div id="emptyNotes" class="empty"><div class="icon">📝</div><h3>لا توجد مذكرات</h3><p>اضغط + لإضافة مذكرة</p></div>
+  <div id="emptyNotes" class="empty"><div class="icon">📝</div><h3>لا توجد مذكرات</h3></div>
 </div>
 
 <div id="page-home" class="page"><div class="empty"><div class="icon">🏠</div><h3>الرئيسية</h3></div></div>
@@ -59,21 +68,24 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 
 <div id="page-folders" class="page">
   <div id="foldersList"></div>
-  <div id="emptyFolders" class="empty"><div class="icon">📁</div><h3>لا توجد مجلدات</h3><p>اضغط + لإضافة مجلد</p></div>
+  <div id="emptyFolders" class="empty"><div class="icon">📁</div><h3>لا توجد مجلدات</h3></div>
 </div>
 
 <div id="page-trash" class="page">
-  <div class="trash-bar"><button id="emptyTrash">إفراغ السلة</button></div>
+  <div style="margin:15px 20px"><button id="emptyTrash" style="width:100%;padding:10px;background:#1f1f2e;border:none;border-radius:10px;color:#ccc">إفراغ السلة</button></div>
   <div id="trashList"></div>
   <div id="emptyTrashMsg" class="empty"><div class="icon">♻️</div><h3>سلة فارغة</h3></div>
 </div>
 
 <div id="page-settings" class="page">
-  <div style="padding:20px">
-    <h3 style="margin-bottom:15px">الإعدادات</h3>
-    <button id="exportBtn" style="background:#22c55e;border:none;padding:14px;border-radius:10px;color:#fff;width:100%;margin-bottom:12px">تصدير المذكرات إلى ملف</button>
-    <button id="clearAll" style="background:#ef4444;border:none;padding:14px;border-radius:10px;color:#fff;width:100%;margin-bottom:12px">مسح كل البيانات</button>
-    <button id="langToggle" style="background:#2a2a3a;border:none;padding:14px;border-radius:10px;color:#fff;width:100%">تبديل اللغة</button>
+  <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+    <h3>الإعدادات</h3>
+    <button id="exportBtn" class="btn-g" style="padding:14px;border:none;border-radius:10px">تصدير ومشاركة</button>
+    <button id="backupBtn" style="background:#6366f1;padding:14px;border:none;border-radius:10px;color:#fff">نسخة احتياطية كاملة</button>
+    <button id="importBtn" style="background:#2a2a3a;padding:14px;border:none;border-radius:10px;color:#fff">استيراد من ملف</button>
+    <input type="file" id="importFile" accept=".txt,.json" hidden>
+    <button id="lockBtn" style="background:#f59e0b;padding:14px;border:none;border-radius:10px;color:#000">تفعيل/تغيير القفل</button>
+    <button id="clearAll" style="background:#ef4444;padding:14px;border:none;border-radius:10px;color:#fff">مسح كل البيانات</button>
   </div>
 </div>
 
@@ -90,7 +102,8 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 <div class="modal" id="modal">
   <div class="modal-box">
     <h3 id="modalTitle">إضافة</h3>
-    <textarea id="modalInput" placeholder="اكتب هنا..."></textarea>
+    <select id="folderSelect"></select>
+    <textarea id="modalInput" placeholder="اكتب مذكرتك..."></textarea>
     <div class="modal-actions">
       <button class="btn-s" id="modalCancel">إلغاء</button>
       <button class="btn-p" id="modalSave">حفظ</button>
@@ -98,57 +111,78 @@ body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
   </div>
 </div>
 
+<div class="modal" id="exportModal">
+  <div class="modal-box">
+    <h3>تصدير المذكرات</h3>
+    <textarea id="exportText" style="height:200px"></textarea>
+    <div class="modal-actions">
+      <button class="btn-s" id="copyBtn">نسخ</button>
+      <button class="btn-p" id="shareBtn">مشاركة</button>
+    </div>
+    <button class="btn-s" id="closeExport" style="width:100%;margin-top:10px">إغلاق</button>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-  const NK='sm_notes_v24', FK='sm_folders_v24', TK='sm_trash_v24';
+  const NK='sm_notes_v24', FK='sm_folders_v24', TK='sm_trash_v24', PK='sm_pin';
   let notes=JSON.parse(localStorage.getItem(NK)||'[]');
   let folders=JSON.parse(localStorage.getItem(FK)||'[]');
   let trash=JSON.parse(localStorage.getItem(TK)||'[]');
-  let currentPage='notes', modalMode='note';
+  let pin=localStorage.getItem(PK);
+  let currentPage='notes', currentFolder=null;
+
+  // قفل
+  if(pin){document.getElementById('lockScreen').style.display='flex';}
+  document.getElementById('pinBtn').onclick=()=>{if(document.getElementById('pinInput').value===pin){document.getElementById('lockScreen').style.display='none';}else{alert('رقم خاطئ');}};
 
   const save=()=>{localStorage.setItem(NK,JSON.stringify(notes));localStorage.setItem(FK,JSON.stringify(folders));localStorage.setItem(TK,JSON.stringify(trash));};
   const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',1700);};
 
   function renderNotes(){
-    const q=document.getElementById('search').value||''; const list=document.getElementById('notesList'); const empty=document.getElementById('emptyNotes');
-    const f=notes.filter(n=>n.text.includes(q)); list.innerHTML=''; empty.style.display=f.length?'none':'block';
-    f.slice().reverse().forEach(n=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>${n.text.substring(0,30)}</h4><small>${new Date(n.date).toLocaleDateString('ar-EG')}</small></div><span class="act">حذف</span>`;d.onclick=()=>{trash.push(n);notes=notes.filter(x=>x.id!==n.id);save();renderNotes();renderTrash();toast('نُقلت للسلة');};list.appendChild(d);});
+    const q=document.getElementById('search').value||''; const list=document.getElementById('notesList');
+    let f=notes.filter(n=>(currentFolder? n.folderId===currentFolder:true) && n.text.includes(q));
+    list.innerHTML=''; document.getElementById('emptyNotes').style.display=f.length?'none':'block';
+    f.slice().reverse().forEach(n=>{const d=document.createElement('div');d.className='item';const folderName=folders.find(f=>f.id===n.folderId)?.name||'';d.innerHTML=`<div><h4>${n.text.substring(0,35)}</h4><small>${folderName} - ${new Date(n.date).toLocaleDateString('ar-EG')}</small></div><span class="act">حذف</span>`;d.onclick=e=>{if(e.target.classList.contains('act')){trash.push(n);notes=notes.filter(x=>x.id!==n.id);save();renderNotes();toast('نُقلت للسلة');}};list.appendChild(d);});
   }
   function renderFolders(){
-    const list=document.getElementById('foldersList'); const empty=document.getElementById('emptyFolders'); list.innerHTML=''; empty.style.display=folders.length?'none':'block';
-    folders.slice().reverse().forEach(f=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>📁 ${f.name}</h4><small>${new Date(f.date).toLocaleDateString('ar-EG')}</small></div>`;list.appendChild(d);});
+    const list=document.getElementById('foldersList'); list.innerHTML=''; document.getElementById('emptyFolders').style.display=folders.length?'none':'block';
+    folders.forEach(f=>{const count=notes.filter(n=>n.folderId===f.id).length;const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>📁 ${f.name}</h4><small>${count} مذكرة</small></div>`;d.onclick=()=>{currentFolder=f.id;document.querySelector('[data-page="notes"]').click();document.getElementById('appTitle').textContent='📁 '+f.name;renderNotes();};list.appendChild(d);});
+    const all=document.createElement('div');all.className='item';all.innerHTML=`<div><h4>📝 كل المذكرات</h4><small>${notes.length} مذكرة</small></div>`;all.onclick=()=>{currentFolder=null;document.querySelector('[data-page="notes"]').click();document.getElementById('appTitle').textContent='📝 مذكراتي';renderNotes();};list.prepend(all);
   }
-  function renderTrash(){
-    const list=document.getElementById('trashList'); const empty=document.getElementById('emptyTrashMsg'); list.innerHTML=''; empty.style.display=trash.length?'none':'block';
-    trash.slice().reverse().forEach(t=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>${t.text.substring(0,30)}</h4></div><span class="act">استعادة</span>`;d.onclick=()=>{notes.push(t);trash=trash.filter(x=>x.id!==t.id);save();renderNotes();renderTrash();toast('تمت الاستعادة');};list.appendChild(d);});
-  }
+  function renderTrash(){const list=document.getElementById('trashList');list.innerHTML='';document.getElementById('emptyTrashMsg').style.display=trash.length?'none':'block';trash.slice().reverse().forEach(t=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<div><h4>${t.text.substring(0,30)}</h4></div><span class="act">استعادة</span>`;d.onclick=()=>{notes.push(t);trash=trash.filter(x=>x.id!==t.id);save();renderNotes();renderTrash();toast('تمت الاستعادة');};list.appendChild(d);});}
 
-  function openModal(mode){modalMode=mode;document.getElementById('modalTitle').textContent=mode==='note'?'مذكرة جديدة':'مجلد جديد';document.getElementById('modalInput').placeholder=mode==='note'?'اكتب مذكرتك...':'اسم المجلد';document.getElementById('modalInput').value='';document.getElementById('modal').style.display='flex';document.getElementById('modalInput').focus();}
-  function closeModal(){document.getElementById('modal').style.display='none';}
+  function openModal(){const sel=document.getElementById('folderSelect');sel.innerHTML='<option value="">بدون مجلد</option>';folders.forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.name}</option>`);document.getElementById('modalInput').value='';document.getElementById('modal').style.display='flex';}
+  document.getElementById('modalCancel').onclick=()=>document.getElementById('modal').style.display='none';
+  document.getElementById('modalSave').onclick=()=>{const v=document.getElementById('modalInput').value.trim();if(!v)return;const fid=document.getElementById('folderSelect').value||null;notes.push({id:Date.now(),text:v,date:Date.now(),folderId:fid?Number(fid):null});save();renderNotes();renderFolders();document.getElementById('modal').style.display='none';toast('تم الحفظ');};
 
-  document.getElementById('modalSave').onclick=()=>{const v=document.getElementById('modalInput').value.trim();if(!v)return;if(modalMode==='note'){notes.push({id:Date.now(),text:v,date:Date.now()});renderNotes();toast('تم حفظ المذكرة');}else{folders.push({id:Date.now(),name:v,date:Date.now()});renderFolders();toast('تم إنشاء المجلد');}save();closeModal();};
-  document.getElementById('modalCancel').onclick=closeModal;
+  document.getElementById('btnNew').onclick=()=>currentPage==='folders'?openFolderModal():openModal();
+  document.getElementById('fab').onclick=()=>currentPage==='folders'?openFolderModal():openModal();
+  function openFolderModal(){const name=prompt('اسم المجلد:');if(name){folders.push({id:Date.now(),name:name.trim(),date:Date.now()});save();renderFolders();toast('تم إنشاء المجلد');}}
 
-  function addCurrent(){if(currentPage==='notes')openModal('note');else if(currentPage==='folders')openModal('folder');else if(currentPage==='trash'){document.querySelector('[data-page="notes"]').click();}else toast('اذهب للمذكرات أو المجلدات');}
-  document.getElementById('btnNew').onclick=addCurrent; document.getElementById('fab').onclick=addCurrent;
   document.getElementById('search').oninput=renderNotes;
+  document.querySelectorAll('.nav-item').forEach(el=>{el.onclick=()=>{document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));currentPage=el.dataset.page;document.getElementById('page-'+currentPage).classList.add('active');};});
 
-  document.querySelectorAll('.nav-item').forEach(el=>{el.onclick=()=>{document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));currentPage=el.dataset.page;document.getElementById('page-'+currentPage).classList.add('active');document.getElementById('btnNew').textContent=currentPage==='folders'?'+ مجلد':'+ جديد';};});
+  // تصدير
+  document.getElementById('exportBtn').onclick=()=>{const content=notes.map(n=>`[${new Date(n.date).toLocaleString('ar-EG')}] ${folders.find(f=>f.id===n.folderId)?.name||'عام'}\n${n.text}`).join('\n\n---\n\n');document.getElementById('exportText').value=content;document.getElementById('exportModal').style.display='flex';};
+  document.getElementById('copyBtn').onclick=()=>{navigator.clipboard.writeText(document.getElementById('exportText').value);toast('تم النسخ');};
+  document.getElementById('shareBtn').onclick=async()=>{try{await navigator.share({title:'SmartMark',text:document.getElementById('exportText').value});}catch{toast('المشاركة غير مدعومة، انسخ النص');}};
+  document.getElementById('closeExport').onclick=()=>document.getElementById('exportModal').style.display='none';
 
-  const trashBtn=document.createElement('button');trashBtn.textContent='♻️ سلة المحذوفات';trashBtn.style.cssText='margin:0 20px 10px;background:#1f1f2e;border:none;padding:10px 16px;border-radius:12px;color:#ccc;width:calc(100% - 40px)';trashBtn.onclick=()=>{document.querySelector('[data-page="notes"]').classList.remove('active');document.getElementById('page-notes').classList.remove('active');document.getElementById('page-trash').classList.add('active');currentPage='trash';};document.getElementById('page-notes').insertBefore(trashBtn,document.getElementById('search'));
+  // نسخة احتياطية
+  document.getElementById('backupBtn').onclick=()=>{const data=JSON.stringify({notes,folders,date:Date.now()});const blob=new Blob([data],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SmartMark-Backup.json';a.click();toast('تم إنشاء النسخة');};
 
-  document.getElementById('emptyTrash').onclick=()=>{if(confirm('إفراغ السلة نهائيا؟')){trash=[];save();renderTrash();toast('تم الإفراغ');}};
-  document.getElementById('clearAll').onclick=()=>{if(confirm('مسح كل البيانات؟')){localStorage.clear();notes=[];folders=[];trash=[];save();renderNotes();renderFolders();renderTrash();toast('تم مسح كل شيء');}};
-  document.getElementById('langToggle').onclick=()=>{const t=document.getElementById('appTitle');t.textContent=t.textContent.includes('مذكراتي')?'📝 My Notes':'📝 مذكراتي';};
+  // استيراد
+  document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+  document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.notes){notes=d.notes;folders=d.folders||[];save();renderNotes();renderFolders();toast('تم الاستيراد');}}catch{toast('ملف غير صالح');}};r.readAsText(f);};
 
-  document.getElementById('exportBtn').onclick=()=>{
-    if(notes.length===0){toast('لا توجد مذكرات');return;}
-    const content=notes.map(n=>`التاريخ: ${new Date(n.date).toLocaleString('ar-EG')}\n${n.text}\n${'-'.repeat(30)}`).join('\n');
-    const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='SmartMark-Export.txt';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-    toast('تم تصدير '+notes.length+' مذكرة');
-  };
+  // قفل
+  document.getElementById('lockBtn').onclick=()=>{const p=prompt('ادخل رقم سري من 4 أرقام (اتركه فارغ لإلغاء القفل):');if(p===null)return;if(p===''){localStorage.removeItem(PK);pin=null;toast('تم إلغاء القفل');}else{localStorage.setItem(PK,p);pin=p;toast('تم تفعيل القفل');}};
+
+  document.getElementById('emptyTrash').onclick=()=>{if(confirm('إفراغ السلة؟')){trash=[];save();renderTrash();}};
+  document.getElementById('clearAll').onclick=()=>{if(confirm('مسح كل شيء؟')){localStorage.clear();location.reload();}};
+
+  const trashBtn=document.createElement('button');trashBtn.textContent='♻️ سلة المحذوفات';trashBtn.style.cssText='margin:0 20px 10px;background:#1f1f2e;border:none;padding:10px 16px;border-radius:12px;color:#ccc;width:calc(100% - 40px)';trashBtn.onclick=()=>{document.getElementById('page-notes').classList.remove('active');document.getElementById('page-trash').classList.add('active');};document.getElementById('page-notes').insertBefore(trashBtn,document.getElementById('search'));
 
   renderNotes();renderFolders();renderTrash();
 });

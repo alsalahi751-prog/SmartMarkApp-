@@ -7,7 +7,7 @@
 <title>SmartMark v2.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
-body{background:#0a14;color:#fff;min-height:100vh;padding-bottom:80px}
+body{background:#0a0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 .header{display:flex;justify-content:space-between;align-items:center;padding:20px}
 .title{font-size:26px;font-weight:bold}
 .btn-add{background:#6366f1;border:none;padding:10px 18px;border-radius:12px;color:#fff;font-size:15px;cursor:pointer}
@@ -16,7 +16,7 @@ body{background:#0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 .page.active{display:block}
 .empty{text-align:center;margin-top:70px}
 .empty .icon{font-size:80px;opacity:.6;margin-bottom:15px}
-.item{background:#1a2a;margin:12px 10px;padding:14px;border-radius:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.item{background:#1a1a2a;margin:12px 10px;padding:14px;border-radius:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
 .item div{flex:1}
 .item h4{margin-bottom:6px;font-size:16px}
 .item p{color:#999;font-size:13px}
@@ -36,7 +36,7 @@ body{background:#0a14;color:#fff;min-height:100vh;padding-bottom:80px}
 .modal-actions{display:flex;gap:10px;margin-top:15px}
 .modal-actions button{flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;cursor:pointer}
 .btn-p{background:#6366f1;color:#fff}
-.btn-s{background:#2a3a;color:#ccc}
+.btn-s{background:#2a2a3a;color:#ccc}
 .trash-bar{display:flex;gap:10px;margin:15px 20px}
 .trash-bar button{flex:1;padding:10px;border:none;border-radius:10px;background:#1f1f2e;color:#ccc}
 </style>
@@ -73,7 +73,7 @@ body{background:#0a14;color:#fff;min-height:100vh;padding-bottom:80px}
   <div style="padding:20px">
     <h3 style="margin-bottom:15px">الإعدادات</h3>
     <button id="clearAll" style="background:#ef4444;border:none;padding:14px;border-radius:10px;color:#fff;width:100%;margin-bottom:12px">مسح كل البيانات</button>
-    <button id="langToggle" style="background:#2a3a;border:none;padding:14px;border-radius:10px;color:#fff;width:100%">تبديل اللغة</button>
+    <button id="langToggle" style="background:#2a2a3a;border:none;padding:14px;border-radius:10px;color:#fff;width:100%">تبديل اللغة</button>
   </div>
 </div>
 
@@ -135,7 +135,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.querySelectorAll('.nav-item').forEach(el=>{el.onclick=()=>{document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));currentPage=el.dataset.page;document.getElementById('page-'+currentPage).classList.add('active');document.getElementById('btnNew').textContent=currentPage==='folders'?'+ مجلد':'+ جديد';};});
 
-  // زر سلة المحذوفات من داخل المذكرات
   const trashBtn=document.createElement('button');trashBtn.textContent='♻️ سلة المحذوفات';trashBtn.style.cssText='margin:0 20px 10px;background:#1f1f2e;border:none;padding:10px 16px;border-radius:12px;color:#ccc;width:calc(100% - 40px)';trashBtn.onclick=()=>{document.querySelector('[data-page="notes"]').classList.remove('active');document.getElementById('page-notes').classList.remove('active');document.getElementById('page-trash').classList.add('active');currentPage='trash';};document.getElementById('page-notes').insertBefore(trashBtn,document.getElementById('search'));
 
   document.getElementById('emptyTrash').onclick=()=>{if(confirm('إفراغ السلة نهائيا؟')){trash=[];save();renderTrash();toast('تم الإفراغ');}};

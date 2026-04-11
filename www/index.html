@@ -757,7 +757,9 @@ body::before {
 .action-bar {
   display: none;
   padding: 10px 16px;
-  background: var(--primary);
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(20px);
   align-items: center;
   justify-content: space-between;
   flex-direction: row-reverse;
@@ -1495,7 +1497,6 @@ const SM = {
     this._updateBar(section);
     this._rerender(section);
   },
-
 
   // حذف المحدد
   delete(section) {

@@ -135,7 +135,7 @@ body::before {
    SCREENS CONTAINER
 ============================ */
 .screens { flex: 1; overflow: hidden; position: relative; }
-.screen { display: none; height: 100%; overflow-y: auto; padding-bottom: 90px; }
+.screen { display: none; height: 100%; overflow-y: auto; padding-bottom: 140px; }
 .screen.active { display: block; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform: translateY(0) } }
 
@@ -756,15 +756,24 @@ body::before {
 
 .action-bar {
   display: none;
-  padding: 10px 16px;
+  position: fixed;
+  bottom: 72px;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
   background: var(--bg2);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(20px);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
   align-items: center;
   justify-content: space-between;
   flex-direction: row-reverse;
   gap: 8px;
   animation: fadeIn 0.2s ease;
+  z-index: 100;
+}
+.action-bar.show {
+  display: flex;
 }
 .action-bar.show { display: flex; }
 .action-bar-count { color: #fff; font-weight: 800; font-size: 14px; white-space: nowrap; }
@@ -1026,10 +1035,11 @@ body::before {
       <div class="action-bar" id="savedActionBar">
         <div class="action-bar-count" id="savedSelCount">0</div>
         <div class="action-bar-btns">
-          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('saved')" id="ab_saved_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-select-all" onclick="SM.toggleAll('saved')" id="ab_saved_selall">الكل</button>
           <button class="ab-btn ab-btn-move" onclick="SM.move('saved')" id="ab_saved_move">📂 نقل</button>
+          <button class="ab-btn ab-btn-copy" onclick="SM.copy('saved')" id="ab_saved_copy">📋 نسخ</button>
           <button class="ab-btn ab-btn-delete" onclick="SM.delete('saved')" id="ab_saved_del">🗑 حذف</button>
-          <button class="ab-btn ab-btn-delete-all" onclick="SM.deleteAll('saved')" id="ab_saved_delall">🗑 حذف الكل</button>
+          
           <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('saved')" id="ab_saved_cancel">✕ إلغاء</button>
         </div>
       </div>
@@ -1050,9 +1060,9 @@ body::before {
       <div class="action-bar" id="foldersActionBar">
         <div class="action-bar-count" id="foldersSelCount">0</div>
         <div class="action-bar-btns">
-          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('folders')" id="ab_folders_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-select-all" onclick="SM.toggleAll('folders')" id="ab_folders_selall">الكل</button>
           <button class="ab-btn ab-btn-delete" onclick="SM.delete('folders')" id="ab_folders_del">🗑 حذف</button>
-          <button class="ab-btn ab-btn-delete-all" onclick="SM.deleteAll('folders')" id="ab_folders_delall">🗑 حذف الكل</button>
+          
           <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('folders')" id="ab_folders_cancel">✕ إلغاء</button>
         </div>
       </div>
@@ -1083,9 +1093,9 @@ body::before {
       <div class="action-bar" id="notesActionBar">
         <div class="action-bar-count" id="notesSelCount">0</div>
         <div class="action-bar-btns">
-          <button class="ab-btn ab-btn-select-all" onclick="SM.selectAll('notes')" id="ab_notes_selall">تحديد الكل</button>
+          <button class="ab-btn ab-btn-select-all" onclick="SM.toggleAll('notes')" id="ab_notes_selall">الكل</button>
           <button class="ab-btn ab-btn-delete" onclick="SM.delete('notes')" id="ab_notes_del">🗑 حذف</button>
-          <button class="ab-btn ab-btn-delete-all" onclick="SM.deleteAll('notes')" id="ab_notes_delall">🗑 حذف الكل</button>
+          
           <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('notes')" id="ab_notes_cancel">✕ إلغاء</button>
         </div>
       </div>
@@ -1488,6 +1498,26 @@ const SM = {
     this._updateBar(section);
     this._rerender(section);
   },
+  // تبديل تحديد الكل
+  toggleAll(section) {
+    const s = this.state[section];
+    let all = [];
+    if (section === 'saved') all = items.map(i => i.id);
+    else if (section === 'folders') all = folders.map(f => f.id);
+    else if (section === 'notes') all = notes.map(n => n.id);
+    
+    const allSelected = all.length > 0 && all.every(id => s.selected.has(id));
+    if (allSelected) {
+      s.selected.clear();
+      if (s.selected.size === 0) s.active = false;
+    } else {
+      s.active = true;
+      all.forEach(id => s.selected.add(id));
+    }
+    this._updateBar(section);
+    this._rerender(section);
+  },
+
 
   // إلغاء التحديد والخروج
   cancel(section) {
@@ -1498,6 +1528,7 @@ const SM = {
     this._rerender(section);
   },
 
+
   // حذف المحدد
   delete(section) {
     const s = this.state[section];
@@ -1505,10 +1536,10 @@ const SM = {
     if (!confirm((currentLang==='ar'?'حذف ':'Delete ')+s.selected.size+(currentLang==='ar'?' عنصر؟':' items?'))) return;
     if (section==='saved') { items = items.filter(i=>!s.selected.has(i.id)); saveItems(); }
     else if (section==='folders') { folders = folders.filter(f=>!s.selected.has(f.id)); saveFolders(); }
-    else if (section==='notes') { notes = notes.filter(n=>!s.selected.has(n.id)); saveNotes(); }
+    else if (section==='notes') { const toDel = notes.filter(n=>s.selected.has(n.id)); toDel.forEach(n=>deletedNotes.push({...n, deletedAt: Date.now()})); notes = notes.filter(n=>!s.selected.has(n.id)); saveNotes(); }
     this.cancel(section);
     this._rerender(section);
-    showToast(currentLang==='ar'?'🗑 تم الحذف':'🗑 Deleted');
+    showToast(currentLang==='ar'?'🗑 تم النقل لسلة المحذوفات':'🗑 Moved to trash');
   },
   // حذف الكل
   deleteAll(section) {
@@ -1524,7 +1555,7 @@ const SM = {
   move(section) {
     const s = this.state[section];
     if (s.selected.size===0) return;
-    const name = prompt(currentLang==='ar'?'اسم المجلد للنقل إليه:':'Folder name:');
+    if (folders.length===0){showToast(currentLang==='ar'?'❌ لا توجد مجلدات':'❌ No folders','var(--error)');return;} const list = folders.map(f=>f.name).join('\n'); const name = prompt((currentLang==='ar'?'اختر مجلد:\n':'Choose folder:\n')+list+'\n\n'+(currentLang==='ar'?'اكتب الاسم:':'Type name:'));
     if (!name) return;
     const folder = folders.find(f=>f.name===name);
     if (!folder) { showToast(currentLang==='ar'?'❌ المجلد غير موجود':'❌ Not found','var(--error)'); return; }
@@ -1533,6 +1564,23 @@ const SM = {
     this._rerender(section);
     showToast(currentLang==='ar'?'📂 تم النقل':'📂 Moved');
   },
+  // نسخ
+  copy(section) {
+    const s = this.state[section];
+    if (s.selected.size===0) return;
+    if (section==='saved') {
+      const toCopy = items.filter(i=>s.selected.has(i.id));
+      toCopy.forEach(item => {
+        const newItem = {...item, id: Date.now()+Math.random(), title: item.title + ' (نسخة)'};
+        items.push(newItem);
+      });
+      saveItems();
+    }
+    this.cancel(section);
+    this._rerender(section);
+    showToast(currentLang==='ar'?'📋 تم النسخ':'📋 Copied');
+  },
+
 
   // تحديث شريط الإجراءات
   _updateBar(section) {

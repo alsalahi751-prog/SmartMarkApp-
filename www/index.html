@@ -48,6 +48,20 @@ body.light-mode {
   --border: rgba(99,102,241,0.2);
   --shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
+body.light-mode .ab-btn {
+  color: var(--text1) !important;
+  background: var(--bg3) !important;
+  border: 1px solid var(--border);
+}
+body.light-mode .ab-btn:hover {
+  background: var(--bg4) !important;
+}
+body.light-mode .action-bar {
+  background: rgba(255,255,255,0.95) !important;
+  border-top: 1px solid rgba(0,0,0,0.15) !important;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1) !important;
+}
+
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -806,6 +820,16 @@ body::before {
 @media (max-width: 420px) {
   .items-grid { grid-template-columns: 1fr; }
 }
+
+body.light-mode .ab-btn {
+  color: #1e1e2e !important;
+  background: #f0f0f8 !important;
+}
+body.light-mode .ab-btn-primary {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
 </style>
 </head>
 <body>
@@ -1037,7 +1061,7 @@ body::before {
         <div class="action-bar-btns">
           <button class="ab-btn ab-btn-select-all" onclick="SM.toggleAll('saved')" id="ab_saved_selall">الكل</button>
           <button class="ab-btn ab-btn-move" onclick="SM.move('saved')" id="ab_saved_move">📂 نقل</button>
-          <button class="ab-btn ab-btn-copy" onclick="SM.copy('saved')" id="ab_saved_copy">📋 نسخ</button>
+          
           <button class="ab-btn ab-btn-delete" onclick="SM.delete('saved')" id="ab_saved_del">🗑 حذف</button>
           
           <button class="ab-btn ab-btn-cancel" onclick="SM.cancel('saved')" id="ab_saved_cancel">✕ إلغاء</button>
@@ -1780,7 +1804,9 @@ function exportData() {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'SmartMark_Backup_' + new Date().toISOString().split('T')[0] + '.json';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast(currentLang === 'ar' ? '✓ تم التصدير' : '✓ Exported', 'var(--success)');
 }

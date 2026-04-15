@@ -1023,22 +1023,10 @@ body.light-mode .ab-btn-primary {
 </head>
 <body>
 <script>
-// تنظيف البيانات التالفة
-try {
-  ['sm_items','sm_folders','sm_notes','sm_deleted_notes'].forEach(function(k){
-    try { JSON.parse(localStorage.getItem(k)||'[]') } catch(e){ localStorage.removeItem(k) }
-  });
-} catch(e){}
+try{['sm_items','sm_folders','sm_notes','sm_deleted_notes'].forEach(function(k){try{JSON.parse(localStorage.getItem(k)||'[]')}catch(e){localStorage.removeItem(k)}})}catch(e){}
 
-// فشل آمن - إخفاء شاشة التحميل بعد 3 ثواني حتى لو تعطل الكود
-setTimeout(function(){
-  try {
-    var s = document.getElementById('splash');
-    if(s) s.style.display = 'none';
-    var a = document.getElementById('app');
-    if(a) a.classList.add('visible');
-  } catch(e){}
-}, 2800);
+// فشل آمن - إخفاء شاشة التحميل
+setTimeout(function(){try{var s=document.getElementById('splash');if(s)s.style.display='none';var a=document.getElementById('app');if(a)a.classList.add('visible')}catch(e){}},2800);
 </script>
 
 
@@ -1285,7 +1273,7 @@ setTimeout(function(){
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="foldersTitle">📁 المجلدات</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="color:var(--text2)">☑</div>
+          
           <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
         </div>
       </div>
@@ -1631,10 +1619,7 @@ setTimeout(function(){
       <span>🔗</span>
       <div id="btnOpenUrl">فتح</div>
     </button>
-    <button class="detail-btn" onclick="copyUrl()">
-      <span>📋</span>
-      <div id="btnCopyUrl">نسخ</div>
-    </button>
+
     <button class="detail-btn" onclick="editDetail()">
       <span>✏️</span>
       <div id="btnEdit">تعديل</div>
@@ -1999,17 +1984,34 @@ function exportData() {
       exportDate: new Date().toISOString(),
       items: JSON.parse(localStorage.getItem('sm_items') || '[]'),
       folders: JSON.parse(localStorage.getItem('sm_folders') || '[]'),
-      notes: JSON.parse(localStorage.getItem('sm_notes') || '[]')
+      notes: JSON.parse(localStorage.getItem('sm_notes') || '[]'),
+      deletedNotes: JSON.parse(localStorage.getItem('sm_deleted_notes') || '[]')
     };
     const json = JSON.stringify(data, null, 2);
+    const done = () => showToast(currentLang==='ar'?'✓ تم النسخ للحافظة':'✓ Copied to clipboard','var(--success)');
+    
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(json);
-      showToast(currentLang==='ar'?'✓ تم النسخ':'✓ Copied','var(--success)');
+      navigator.clipboard.writeText(json).then(done).catch(() => fallbackCopy(json, done));
       return;
     }
-    prompt('Copy:', json);
+    fallbackCopy(json, done);
   } catch(e) {
-    showToast('❌','var(--error)');
+    showToast('❌ خطأ','var(--error)');
+  }
+}
+function fallbackCopy(text, callback) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(callback) callback();
+  } catch(e) {
+    prompt(currentLang==='ar'?'انسخ البيانات (Ctrl+C):':'Copy data:', text);
   }
 }
 

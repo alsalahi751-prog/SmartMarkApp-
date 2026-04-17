@@ -190,6 +190,9 @@
     originalRAF.call(window, onFrame);
   }
 })();</script>
+
+<!-- Playables SDK -->
+<script>try{["sm_items","sm_folders","sm_notes","sm_deleted_notes"].forEach(function(k){try{JSON.parse(localStorage.getItem(k)||"[]")}catch(e){localStorage.removeItem(k)}})}catch(e){}</script>
 <script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
@@ -1019,16 +1022,15 @@ body.light-mode .ab-btn-primary {
   color: white !important;
 }
 
+/* Fix 1: Hide folders header buttons */
+#btnSelectFolders, #btnNewFolder { display: none !important; }
+
 </style>
 </head>
 <body>
-<script>
-try{['sm_items','sm_folders','sm_notes','sm_deleted_notes'].forEach(function(k){try{JSON.parse(localStorage.getItem(k)||'[]')}catch(e){localStorage.removeItem(k)}})}catch(e){}
+<script>setTimeout(function(){try{var s=document.getElementById('splash');if(s)s.style.display='none';var a=document.getElementById('app');if(a)a.classList.add('visible')}catch(e){}},2800);</script>
 
-// فشل آمن - إخفاء شاشة التحميل
-setTimeout(function(){try{var s=document.getElementById('splash');if(s)s.style.display='none';var a=document.getElementById('app');if(a)a.classList.add('visible')}catch(e){}},2800);
-</script>
-
+<script>try{["sm_items","sm_folders","sm_notes","sm_deleted_notes"].forEach(function(k){try{JSON.parse(localStorage.getItem(k)||"[]")}catch(e){localStorage.removeItem(k)}})}catch(e){}setTimeout(function(){try{var s=document.getElementById('splash');if(s)s.style.display='none';var a=document.getElementById('app');if(a)a.classList.add('visible')}catch(e){}},2800);</script>
 
 <!-- ==========================================
      TOAST NOTIFICATION
@@ -1273,7 +1275,7 @@ setTimeout(function(){try{var s=document.getElementById('splash');if(s)s.style.d
       <div class="section-header">
         <h2 style="font-size:26px;font-weight:900" id="foldersTitle">📁 المجلدات</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          
+          <div class="see-all" id="btnSelectFolders" onclick="toggleFoldersSelect()" style="color:var(--text2)">☑</div>
           <div class="see-all" id="btnNewFolder" onclick="createFolder()">+ جديد</div>
         </div>
       </div>
@@ -1619,7 +1621,10 @@ setTimeout(function(){try{var s=document.getElementById('splash');if(s)s.style.d
       <span>🔗</span>
       <div id="btnOpenUrl">فتح</div>
     </button>
-
+    <button class="detail-btn" onclick="copyUrl()">
+      <span>📋</span>
+      <div id="btnCopyUrl">نسخ</div>
+    </button>
     <button class="detail-btn" onclick="editDetail()">
       <span>✏️</span>
       <div id="btnEdit">تعديل</div>
@@ -1988,30 +1993,18 @@ function exportData() {
       deletedNotes: JSON.parse(localStorage.getItem('sm_deleted_notes') || '[]')
     };
     const json = JSON.stringify(data, null, 2);
-    const done = () => showToast(currentLang==='ar'?'✓ تم النسخ للحافظة':'✓ Copied to clipboard','var(--success)');
-    
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(json).then(done).catch(() => fallbackCopy(json, done));
-      return;
-    }
-    fallbackCopy(json, done);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'smartmark-backup-' + new Date().toISOString().split('T')[0] + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(currentLang==='ar'?'✓ تم التصدير':'✓ Exported','var(--success)');
   } catch(e) {
-    showToast('❌ خطأ','var(--error)');
-  }
-}
-function fallbackCopy(text, callback) {
-  try {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.top = '-1000px';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    if(callback) callback();
-  } catch(e) {
-    prompt(currentLang==='ar'?'انسخ البيانات (Ctrl+C):':'Copy data:', text);
+    showToast(currentLang==='ar'?'✗ خطأ':'✗ Error','var(--danger)');
   }
 }
 
@@ -3970,5 +3963,16 @@ window.addEventListener('popstate', ()=>{
 });
 
 </script>
+
+<script>
+// Failsafe: Force hide splash after 3 seconds
+setTimeout(function(){
+  var s = document.getElementById('splash');
+  var a = document.getElementById('app');
+  if(s) s.style.display = 'none';
+  if(a) a.classList.add('visible');
+}, 3000);
+</script>
+
 </body>
 </html>

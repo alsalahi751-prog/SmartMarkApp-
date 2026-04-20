@@ -3,7 +3,6 @@
   "appName": "SmartMark",
   "webDir": "www",
   "server": {
-    "androidScheme": "https",
-    "cleartext": true
+    "androidScheme": "https"
   }
 }

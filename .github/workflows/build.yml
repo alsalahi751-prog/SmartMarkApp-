@@ -3,6 +3,7 @@ name: Build SmartMark APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,38 +14,63 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
 
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Capacitor v5
+      - name: Verify www/index.html
+        run: |
+          echo "=== Checking index.html ==="
+          ls -lh www/index.html
+          wc -l www/index.html
+          head -5 www/index.html
+          # يجب أن يكون أكثر من 1000 سطر، إذا كان 51 سطر فالملف تالف
+          LINES=$(wc -l < www/index.html)
+          if [ "$LINES" -lt 500 ]; then
+            echo "❌ ERROR: index.html is corrupted (only $LINES lines)"
+            exit 1
+          fi
+          echo "✓ index.html is valid ($LINES lines)"
+
+      - name: Install dependencies
         run: |
           npm init -y
           npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
 
-      - name: Setup Android project
+      - name: Setup Capacitor (first time only)
         run: |
-          npx cap init SmartMark com.smartmark.app --web-dir www
-          npx cap add android
-          npx cap copy android
+          if [ ! -d "android" ]; then
+            npx cap init SmartMark com.smartmark.app --web-dir www
+            npx cap add android
+          fi
+
+      - name: Clean and copy web assets
+        run: |
+          rm -rf android/app/src/main/assets/public
+          npx cap copy android --force
+          echo "=== Verifying copied files ==="
+          ls -lh android/app/src/main/assets/public/
 
       - name: Copy app icons
         run: |
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher.png
-            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_round.png
-            cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_foreground.png
+            if [ -f "mipmap-${density}/ic_launcher.png" ]; then
+              cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher.png
+              cp mipmap-${density}/ic_launcher.png android/app/src/main/res/mipmap-${density}/ic_launcher_round.png
+            fi
           done
 
       - name: Build APK
         run: |
           cd android
+          ./gradlew clean
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --refresh-dependencies
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SmartMark-APK
+          name: SmartMark-APK-${{ github.run_number }}
           path: android/app/build/outputs/apk/debug/app-debug.apk

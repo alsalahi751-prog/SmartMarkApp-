@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
@@ -1790,47 +1793,53 @@ function clearStorage() {
   showToast(currentLang === 'ar' ? '✓ تم مسح ذاكرة التخزين' : '✓ Cache cleared', 'var(--success)');
 }
 
-function exportData() {
+async function exportData() {
   try {
     const data = {
-      version: '2.0',
+      version: "2.0",
       exportDate: new Date().toISOString(),
-      items: JSON.parse(localStorage.getItem('sm_items') || '[]'),
-      folders: JSON.parse(localStorage.getItem('sm_folders') || '[]'),
-      notes: JSON.parse(localStorage.getItem('sm_notes') || '[]'),
-      deletedNotes: JSON.parse(localStorage.getItem('sm_deleted_notes') || '[]')
+      items: JSON.parse(localStorage.getItem("sm_items") || "[]"),
+      folders: JSON.parse(localStorage.getItem("sm_folders") || "[]"),
+      notes: JSON.parse(localStorage.getItem("sm_notes") || "[]"),
+      deletedNotes: JSON.parse(localStorage.getItem("sm_deleted_notes") || "[]")
     };
+
     const json = JSON.stringify(data, null, 2);
-    const fileName = 'smartmark-backup-' + new Date().toISOString().slice(0,10) + '.json';
-    
-    // Method 1: Web Share API - native mobile save dialog
-    if (navigator.share && navigator.canShare) {
-      const file = new File([json], fileName, {type: 'application/json'});
-      if (navigator.canShare({files: [file]})) {
-        navigator.share({files: [file], title: 'SmartMark Backup'}).then(() => {
-          showToast(currentLang==='ar'?'✓ تم الحفظ':'✓ Saved','var(--success)');
-        }).catch((err) => {
-          if (err.name !== 'AbortError') {
-            showToast(currentLang==='ar'?'✗ تم الإلغاء':'✗ Cancelled','var(--danger)');
-          }
-        });
-        return;
-      }
+
+    // 🟢 إذا داخل تطبيق APK (Capacitor)
+    if (window.Capacitor && Capacitor.Plugins?.Filesystem) {
+      const { Filesystem, Directory } = Capacitor.Plugins;
+
+      await Filesystem.writeFile({
+        path: "smartmark-backup.json",
+        data: json,
+        directory: Directory.Documents,
+        encoding: "utf8"
+      });
+
+      alert("✅ تم حفظ النسخة في ملفات الجهاز");
+      return;
     }
-    
-    // Method 2: Standard blob download
-    const blob = new Blob([json], {type: 'application/json'});
+
+    // 🟢 إذا داخل المتصفح
+    const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+
+    const a = document.createElement("a");
     a.href = url;
-    a.download = fileName;
+    a.download = "smartmark-backup.json";
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
     URL.revokeObjectURL(url);
-    showToast(currentLang==='ar'?'✓ تم التصدير':'✓ Exported','var(--success)');
-  } catch(e) {
-    showToast(currentLang==='ar'?'✗ خطأ: '+e.message:'✗ Error: '+e.message,'var(--danger)');
+
+    alert("✅ تم التصدير بنجاح");
+
+  } catch (error) {
+    console.error(error);
+    alert("❌ فشل التصدير");
   }
 }
 
@@ -3788,6 +3797,13 @@ window.addEventListener('popstate', ()=>{
   ['saved','folders','notes'].forEach(sec=>{ if(SM.state[sec].active) SM.cancel(sec); });
 });
 
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
+}
 </script>
 </body>
 </html>

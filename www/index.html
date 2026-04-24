@@ -2390,21 +2390,101 @@ function clearStorage() {
 }
 
 async function exportData() {
-  try {
-    const data = { version:"2.0", exportDate: new Date().toISOString(), items: JSON.parse(localStorage.getItem("sm_items")||"[]"), folders: JSON.parse(localStorage.getItem("sm_folders")||"[]"), notes: JSON.parse(localStorage.getItem("sm_notes")||"[]"), deletedNotes: JSON.parse(localStorage.getItem("sm_deleted_notes")||"[]") };
-    const json = JSON.stringify(data, null, 2);
-    if (window.Capacitor && Capacitor.Plugins?.Filesystem) {
-      const { Filesystem, Directory } = Capacitor.Plugins;
-      await Filesystem.writeFile({ path:"smartmark-backup.json", data:json, directory:Directory.Documents, encoding:"utf8" });
-      alert("✅ تم حفظ النسخة في ملفات الجهاز");
-      return;
+    try {
+        const data = {
+            version: "2.0",
+            exportDate: new Date().toISOString(),
+            items: JSON.parse(localStorage.getItem("sm_items") || "[]"),
+            folders: JSON.parse(localStorage.getItem("sm_folders") || "[]"),
+            notes: JSON.parse(localStorage.getItem("sm_notes") || "[]"),
+            deletedNotes: JSON.parse(localStorage.getItem("sm_deleted_notes") || "[]")
+        };
+        const json = JSON.stringify(data, null, 2);
+
+        // 1. Capacitor environment (native app)
+        if (window.Capacitor && Capacitor.Plugins?.Filesystem) {
+            const { Filesystem, Directory } = Capacitor.Plugins;
+
+            // كتابة الملف في مجلد الوثائق الخاص بالتطبيق
+            await Filesystem.writeFile({
+                path: "smartmark-backup.json",
+                data: json,
+                directory: Directory.Documents,
+                encoding: "utf8"
+            });
+
+            // محاولة مشاركة الملف مباشرة إذا كانت إضافة Share متاحة
+            try {
+                if (Capacitor.Plugins?.Share) {
+                    await Capacitor.Plugins.Share.share({
+                        title: "SmartMark Backup",
+                        text: "ملف النسخة الاحتياطية",
+                        url: "smartmark-backup.json",
+                        dialogTitle: "مشاركة النسخة الاحتياطية"
+                    });
+                    showToast("✅ تم التصدير والمشاركة", "var(--success)");
+                    return;
+                }
+            } catch (shareError) {
+                // تجاهل الخطأ إذا لم تكن المشاركة مدعومة
+            }
+
+            // الحصول على مسار الملف وإبلاغ المستخدم
+            try {
+                const uriResult = await Filesystem.getUri({
+                    directory: Directory.Documents,
+                    path: "smartmark-backup.json"
+                });
+                alert(`✅ تم حفظ النسخة الاحتياطية بنجاح في:\n${uriResult.uri}\n\nيمكنك الوصول إلى الملف من خلال مدير الملفات في مجلد المستندات.`);
+            } catch (e) {
+                alert("✅ تم حفظ النسخة الاحتياطية في مجلد المستندات الخاص بالتطبيق.");
+            }
+            return;
+        }
+
+        // 2. بيئة المتصفح و WebView العادي
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const fileName = "smartmark-backup.json";
+
+        // دالة مساعدة لبدء التنزيل
+        const triggerDownload = (downloadUrl, name) => {
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = name;
+            a.style.display = "none";
+            a.target = "_blank"; // مهم لبعض WebViews
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+            }, 1000);
+        };
+
+        // محاولة التنزيل المباشر أولاً
+        triggerDownload(url, fileName);
+
+        // في WebView قد لا يبدأ التنزيل، نحاول فتح الرابط في نافذة جديدة
+        setTimeout(() => {
+            window.open(url, '_blank');
+        }, 300);
+
+        // كحل أخير، نسخ المحتوى إلى الحافظة مع تنبيه واضح
+        try {
+            await navigator.clipboard.writeText(json);
+            alert(`✅ تم نسخ محتوى النسخة الاحتياطية إلى الحافظة.\n\nإذا لم يبدأ التنزيل تلقائيًا، يمكنك لصق المحتوى في ملف نصي وحفظه باسم "${fileName}".`);
+        } catch (clipErr) {
+            // إذا تعذر النسخ، نعرض تعليمات يدوية
+            alert(`✅ تم تجهيز النسخة الاحتياطية.\n\nإذا لم يبدأ التنزيل، يرجى استخدام زر "فتح الرابط" الظاهر أو حاول النقر بزر الماوس الأيمن واختيار "حفظ باسم".\nاسم الملف: ${fileName}`);
+        }
+
+        showToast("✅ تم تجهيز النسخة الاحتياطية", "var(--success)");
+
+    } catch (error) {
+        console.error(error);
+        alert("❌ فشل التصدير: " + (error.message || "حدث خطأ غير معروف"));
     }
-    const blob = new Blob([json], { type:"application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "smartmark-backup.json"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    alert("✅ تم التصدير بنجاح");
-  } catch(error) { console.error(error); alert("❌ فشل التصدير"); }
 }
 
 function importData(input) {

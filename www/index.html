@@ -2006,7 +2006,8 @@ function saveCurrentNote() {
   const rawHtml = noteEl.innerHTML;
   const safeHtml = rawHtml.replace(/<script[^>]*>.*?<\/script>/gi,'').replace(/<style[^>]*>.*?<\/style>/gi,'').substring(0,50000);
   const noteData = {
-    id: currentNoteId, title,
+    id: currentNoteId,
+    title,
     content: safeHtml,
     contentText: noteEl.innerText.substring(0,5000),
     date: new Date().toLocaleDateString(currentLang==='ar'?'ar-EG':'en-US')
@@ -2404,16 +2405,12 @@ async function exportData() {
         // 1. Capacitor environment (native app)
         if (window.Capacitor && Capacitor.Plugins?.Filesystem) {
             const { Filesystem, Directory } = Capacitor.Plugins;
-
-            // كتابة الملف في مجلد الوثائق الخاص بالتطبيق
             await Filesystem.writeFile({
                 path: "smartmark-backup.json",
                 data: json,
                 directory: Directory.Documents,
                 encoding: "utf8"
             });
-
-            // محاولة مشاركة الملف مباشرة إذا كانت إضافة Share متاحة
             try {
                 if (Capacitor.Plugins?.Share) {
                     await Capacitor.Plugins.Share.share({
@@ -2425,16 +2422,9 @@ async function exportData() {
                     showToast("✅ تم التصدير والمشاركة", "var(--success)");
                     return;
                 }
-            } catch (shareError) {
-                // تجاهل الخطأ إذا لم تكن المشاركة مدعومة
-            }
-
-            // الحصول على مسار الملف وإبلاغ المستخدم
+            } catch (shareError) {}
             try {
-                const uriResult = await Filesystem.getUri({
-                    directory: Directory.Documents,
-                    path: "smartmark-backup.json"
-                });
+                const uriResult = await Filesystem.getUri({ directory: Directory.Documents, path: "smartmark-backup.json" });
                 alert(`✅ تم حفظ النسخة الاحتياطية بنجاح في:\n${uriResult.uri}\n\nيمكنك الوصول إلى الملف من خلال مدير الملفات في مجلد المستندات.`);
             } catch (e) {
                 alert("✅ تم حفظ النسخة الاحتياطية في مجلد المستندات الخاص بالتطبيق.");
@@ -2447,13 +2437,12 @@ async function exportData() {
         const url = URL.createObjectURL(blob);
         const fileName = "smartmark-backup.json";
 
-        // دالة مساعدة لبدء التنزيل
         const triggerDownload = (downloadUrl, name) => {
             const a = document.createElement("a");
             a.href = downloadUrl;
             a.download = name;
             a.style.display = "none";
-            a.target = "_blank"; // مهم لبعض WebViews
+            a.target = "_blank";
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
@@ -2462,21 +2451,15 @@ async function exportData() {
             }, 1000);
         };
 
-        // محاولة التنزيل المباشر أولاً
+        // محاولة التنزيل المباشر
         triggerDownload(url, fileName);
 
-        // في WebView قد لا يبدأ التنزيل، نحاول فتح الرابط في نافذة جديدة
-        setTimeout(() => {
-            window.open(url, '_blank');
-        }, 300);
-
-        // كحل أخير، نسخ المحتوى إلى الحافظة مع تنبيه واضح
+        // خطة احتياطية آمنة: نسخ إلى الحافظة مع تعليمات بسيطة (بدون فتح صفحة نصية)
         try {
             await navigator.clipboard.writeText(json);
             alert(`✅ تم نسخ محتوى النسخة الاحتياطية إلى الحافظة.\n\nإذا لم يبدأ التنزيل تلقائيًا، يمكنك لصق المحتوى في ملف نصي وحفظه باسم "${fileName}".`);
         } catch (clipErr) {
-            // إذا تعذر النسخ، نعرض تعليمات يدوية
-            alert(`✅ تم تجهيز النسخة الاحتياطية.\n\nإذا لم يبدأ التنزيل، يرجى استخدام زر "فتح الرابط" الظاهر أو حاول النقر بزر الماوس الأيمن واختيار "حفظ باسم".\nاسم الملف: ${fileName}`);
+            alert(`✅ تم تجهيز النسخة الاحتياطية.\n\nإذا لم يبدأ التنزيل، يرجى استخدام خيار "حفظ باسم" من المتصفح.`);
         }
 
         showToast("✅ تم تجهيز النسخة الاحتياطية", "var(--success)");
